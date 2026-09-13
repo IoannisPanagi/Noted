@@ -1,0 +1,17 @@
+# .dockerignore
+node_modules
+.svelte-kit
+build
+.git
+.env
+*.md
+.vscode
+.idea
+npm-debug.log
+.DS_Store
+notes.db
+notes.db-shm
+notes.db-wal
+notes-dev.db
+notes-dev.db-shm
+notes-dev.db-wal
