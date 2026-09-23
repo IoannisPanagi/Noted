@@ -31,7 +31,7 @@ Last verified against a live server + scratch DB on 2026-09-22.
 - **App wiring**: `AppModule` imports `DrizzleModule`, `WorkspacesModule`,
   `CategoriesModule`, `NotesModule` and `AuthModule` (`TokensModule` via
   `AuthModule`). `AuthController` is registered.
-- **Auth**: `POST /api` (login), `DELETE /api` (logout),
+- **Auth**: `POST /api/login`, `DELETE /api/logout`,
   `GET /api/authenticated`. Login rules:
   - workspace exists with a password → the password must match
   - workspace doesn't exist and a password is supplied → the workspace is
@@ -69,8 +69,8 @@ Last verified against a live server + scratch DB on 2026-09-22.
   never leaves the server: HMAC makes the tag meaningless without the key, so
   it can't be tested against candidate hashes. Token algorithm is pinned to
   HS256. See `ERRORS-CORRECTION-API.md` §9.
-- **Zod validation**: `ZodValidationPipe` + Zod DTOs for login, notes and
-  categories; `PayloadSchema` re-validates decoded JWTs. `UpdateNoteSchema` no
+- **Zod validation**: `nestjs-zod` — a global `ZodValidationPipe` plus
+  `createZodDto` DTOs for login, notes, categories and workspaces; `PayloadSchema` re-validates decoded JWTs. `UpdateNoteSchema` no
   longer accepts `passphrase`, since the workspace always comes from
   authentication. Standards live in `apps/server/ERRORS-CORRECTION-API.md`.
 - **Categories (full CRUD)**: `GET`/`POST /api/categories`,
@@ -110,27 +110,23 @@ Last verified against a live server + scratch DB on 2026-09-22.
 - **Health check**: `GET /api/health` is public, runs `SELECT 1` through
   `HealthRepository`, and returns `{ status, name, version }` or a 503 when
   the database is unreachable. The `Hello World!` scaffold
-  (`AppController`/`AppService`/its spec) is deleted, so `GET /api` is now
-  404 — `POST`/`DELETE /api` (login/logout) are unaffected.
+  (`AppController`/`AppService`/its spec) is deleted, so `GET /api` is
+  404.
 - **CORS**: `main.ts` calls `enableCors({ origin: CORS_ORIGINS, credentials: true })`
   when `CORS_ORIGINS` (comma separated, from `constants.ts`) is non-empty, and
   leaves CORS off otherwise, which is what a same-origin or reverse-proxied
   deployment wants. `PORT` moved into `constants.ts` as `APP_PORT` too, so
   `main.ts` no longer reads `process.env` directly.
-- **Logging**: Nest's `ConsoleLogger`, with levels chosen by an optional
-  `LOG_LEVEL` (`silent | fatal | error | warn | info | debug | verbose`,
-  default `info`; an unrecognised value throws at startup). One logger per
-  class covering startup/database bring-up, login and rejected logins,
-  workspace creation/deletion, note and category writes, and guard rejections.
-  No passphrase, password, hash or token is ever logged — a workspace appears
-  as `workspaceRef(passphrase)`, a short HMAC under its own subkey. Rules in
-  `ERRORS-CORRECTION-API.md` §10; pino is not ported.
+- **Logging**: `nestjs-pino`, one log line per request via pino-http, level
+  from an optional `LOG_LEVEL` (pino's names, default `info`). The auth
+  cookie is redacted, since its JWT carries the passphrase. Rules in
+  `ERRORS-CORRECTION-API.md` §10.
 - **OpenAPI docs**: `@nestjs/swagger` serves Swagger UI at `/api/docs`
   (JSON at `/api/docs-json`), with `useGlobalPrefix` so it sits under the same
-  prefix as the routes. Request bodies are generated from the Zod schemas via
-  `ApiZodBody` (`src/openapi/zod-body.decorator.ts`, `z.toJSONSchema` with
-  `io: 'input'`), so there are no parallel class DTOs to drift — the schema
-  stays the single source of truth.
+  prefix as the routes. Schemas come from the `nestjs-zod` DTOs (the document
+  goes through `cleanupOpenApiDoc`; login's response uses `@ZodResponse`), so
+  there are no parallel class DTOs to drift — the schema stays the single
+  source of truth.
 - **Test suite**: 27 e2e specs (`test/*.e2e-spec.ts`, `pnpm test:e2e`) covering
   health, auth, categories, notes and workspaces against a real app on a
   temporary database — happy paths plus the workspace-isolation and validation
@@ -197,8 +193,8 @@ Last verified against a live server + scratch DB on 2026-09-22.
 
 ## Not porting (decided)
 
-- **Global exception filter**: the two error shapes (`ZodValidationPipe`'s
-  `{ message, errors }` and Nest's `{ statusCode, message, error }`) are close
+- **Global exception filter**: the two error shapes (`nestjs-zod`'s
+  `{ statusCode, message, errors }` and Nest's `{ statusCode, message, error }`) are close
   enough — `message` is always a string and status codes are consistent.
   Revisit only if it actually bites. See `ERRORS-CORRECTION-API.md` §2.
 - **Data migrations / seeding** (`database_migration.js`,
