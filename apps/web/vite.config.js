@@ -1,25 +1,13 @@
-import { sveltekit } from '@sveltejs/kit/vite';
+import { fileURLToPath } from 'node:url';
+import { svelte } from '@sveltejs/vite-plugin-svelte';
 import tailwindcss from '@tailwindcss/vite';
 import { defineConfig } from 'vite';
 
 export default defineConfig({
-	server: {
-		port:
-			process.env.NODE_ENV === 'development'
-				? 5173
-				: (process.env.SERVER_PORT ?? 3000),
-	},
-	plugins: [tailwindcss(), sveltekit()],
-	ssr: {
-		noExternal: [
-			'bits-ui',
-			'@lucide/svelte',
-			'clsx',
-			'tailwind-variants',
-			'tailwind-merge',
-		],
-	},
-	optimizeDeps: {
-		include: ['bits-ui'],
+	plugins: [tailwindcss(), svelte()],
+	resolve: {
+		alias: {
+			$lib: fileURLToPath(new URL('./src/lib', import.meta.url)),
+		},
 	},
 });

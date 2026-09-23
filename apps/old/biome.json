@@ -1,0 +1,36 @@
+{
+	"root": false,
+	"extends": "//",
+	"files": {
+		"includes": ["!**/ui"]
+	},
+	"css": {
+		"parser": {
+			"tailwindDirectives": true
+		}
+	},
+	"linter": {
+		"domains": {
+			"tailwind": "recommended",
+			"svelte": "recommended"
+		},
+		"rules": {
+			"preset": "recommended",
+			"suspicious": {
+				"noConsole": "off"
+			},
+			"nursery": {
+				"noSvelteAtHtmlTags": "on",
+				"useSvelteRequireEachKey": "on",
+				"noSvelteUnnecessaryStateWrap": "on"
+			}
+		}
+	},
+	"html": {
+		"formatter": {
+			"enabled": true,
+			"indentScriptAndStyle": true
+		},
+		"experimentalFullSupportEnabled": true
+	}
+}

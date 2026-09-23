@@ -1,10 +1,19 @@
+import { DrizzleModule } from '@drizzle/drizzle.module';
 import { Module } from '@nestjs/common';
-import { AppController } from './app.controller';
-import { AppService } from './app.service';
+import { AuthModule } from '@noted/auth/auth.module';
+import { CategoriesModule } from '@noted/categories/categories.module';
+import { HealthModule } from '@noted/health/health.module';
+import { NotesModule } from '@noted/notes/notes.module';
+import { WorkspacesModule } from '@noted/workspaces/workspaces.module';
 
 @Module({
-  imports: [],
-  controllers: [AppController],
-  providers: [AppService],
+	imports: [
+		DrizzleModule,
+		WorkspacesModule,
+		CategoriesModule,
+		NotesModule,
+		AuthModule,
+		HealthModule,
+	],
 })
 export class AppModule {}
