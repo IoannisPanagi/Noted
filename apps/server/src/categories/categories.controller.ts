@@ -10,7 +10,6 @@ import {
 	Param,
 	Post,
 	Put,
-	UsePipes,
 } from '@nestjs/common';
 import {
 	ApiCookieAuth,
@@ -19,17 +18,9 @@ import {
 	ApiTags,
 } from '@nestjs/swagger';
 import { CategoriesService } from '@noted/categories/categories.service';
-import {
-	type CreateCategoryDto,
-	CreateCategorySchema,
-} from '@noted/categories/dtos/createCategory.dto';
-import {
-	type UpdateCategoryDto,
-	UpdateCategorySchema,
-} from '@noted/categories/dtos/updateCategory.dto';
+import { CreateCategoryDto } from '@noted/categories/dtos/createCategory.dto';
+import { UpdateCategoryDto } from '@noted/categories/dtos/updateCategory.dto';
 import { Passphrase } from '@noted/decorators/passphrase.decorator';
-import { ApiZodBody } from '@noted/openapi/zod-body.decorator';
-import { ZodValidationPipe } from '@noted/pipes/zod-validation.pipe';
 
 @ApiTags('categories')
 @ApiCookieAuth()
@@ -53,12 +44,10 @@ export class CategoriesController {
 		description:
 			"A label that already exists in the workspace updates that category's description instead.",
 	})
-	@ApiZodBody(CreateCategorySchema)
 	@ApiResponse({
 		status: 409,
 		description: 'Label already used by another category',
 	})
-	@UsePipes(new ZodValidationPipe(CreateCategorySchema))
 	public async create(
 		@Body() categoryDto: CreateCategoryDto,
 		@Passphrase() passphrase: string,
@@ -71,7 +60,6 @@ export class CategoriesController {
 	@Put('/:id')
 	@HttpCode(HttpStatus.OK)
 	@ApiOperation({ summary: 'Update a category' })
-	@ApiZodBody(UpdateCategorySchema)
 	@ApiResponse({
 		status: 400,
 		description: 'Body id and route id are mismatched',
@@ -84,7 +72,6 @@ export class CategoriesController {
 		status: 409,
 		description: 'Label already used by another category',
 	})
-	@UsePipes(new ZodValidationPipe(UpdateCategorySchema))
 	public async update(
 		@Body() categoryDto: UpdateCategoryDto,
 		@Passphrase() passphrase: string,

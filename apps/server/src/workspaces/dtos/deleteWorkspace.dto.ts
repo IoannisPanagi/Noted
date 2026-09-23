@@ -1,3 +1,4 @@
+import { createZodDto } from 'nestjs-zod';
 import { z } from 'zod';
 
 // Only a locked workspace needs its password to confirm deletion, so the
@@ -11,4 +12,4 @@ export const DeleteWorkspaceSchema = z
 	})
 	.default({ password: null });
 
-export type DeleteWorkspaceDto = z.infer<typeof DeleteWorkspaceSchema>;
+export class DeleteWorkspaceDto extends createZodDto(DeleteWorkspaceSchema) {}

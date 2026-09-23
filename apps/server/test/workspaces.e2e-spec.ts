@@ -68,7 +68,7 @@ describe('Workspaces (e2e)', () => {
 
 		// The workspace is gone, so the passphrase is open again
 		await api(app)
-			.post('/api')
+			.post('/api/login')
 			.send({ passphrase: 'workspace-locked', password: null })
 			.expect(200);
 	});

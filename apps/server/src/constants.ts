@@ -1,6 +1,5 @@
 import { createHmac } from 'node:crypto';
 import { existsSync } from 'node:fs';
-import { isLogLevelName, LogLevelName } from '@noted/logging/log-levels';
 import { CookieOptions } from 'express';
 
 // Single entry point for configuration: load .env (without overriding
@@ -39,14 +38,9 @@ export const CORS_ORIGINS =
 		.map((origin) => origin.trim())
 		.filter((origin) => origin.length > 0) ?? [];
 
-// Optional: how much the app says. Anything at or above this severity is
-// printed; 'silent' turns logging off entirely.
-const logLevel = process.env.LOG_LEVEL ?? 'info';
-if (!isLogLevelName(logLevel))
-	throw new Error(
-		`LOG_LEVEL must be one of: silent, fatal, error, warn, info, debug, verbose (got '${logLevel}')`,
-	);
-export const LOG_LEVEL: LogLevelName = logLevel;
+// Optional: pino's level (silent, fatal, error, warn, info, debug, trace);
+// pino itself rejects anything else at startup
+export const LOG_LEVEL = process.env.LOG_LEVEL ?? 'info';
 
 if (!process.env.PWF_SECRET)
 	throw new Error('PWF_SECRET environment variable required');
@@ -58,11 +52,6 @@ export const PASSWORD_FINGERPRINT_KEY = createHmac(
 	process.env.PWF_SECRET,
 )
 	.update('noted:password-fingerprint:v1')
-	.digest();
-
-// Separate subkey again, so log references can't be matched against tokens
-export const LOG_REFERENCE_KEY = createHmac('sha256', process.env.PWF_SECRET)
-	.update('noted:log-reference:v1')
 	.digest();
 
 // Best & most secure options for the cookie by default

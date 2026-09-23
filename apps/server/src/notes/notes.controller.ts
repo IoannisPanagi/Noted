@@ -12,7 +12,6 @@ import {
 	Post,
 	Put,
 	Query,
-	UsePipes,
 } from '@nestjs/common';
 import {
 	ApiCookieAuth,
@@ -22,17 +21,9 @@ import {
 	ApiTags,
 } from '@nestjs/swagger';
 import { Passphrase } from '@noted/decorators/passphrase.decorator';
-import {
-	type CreateNoteDto,
-	CreateNoteSchema,
-} from '@noted/notes/dtos/createNote.dto';
-import {
-	type UpdateNoteDto,
-	UpdateNoteSchema,
-} from '@noted/notes/dtos/updateNote.dto';
+import { CreateNoteReqDto } from '@noted/notes/dtos/createNote.dto';
+import { UpdateNoteReqDto } from '@noted/notes/dtos/updateNote.dto';
 import { NotesService } from '@noted/notes/notes.service';
-import { ApiZodBody } from '@noted/openapi/zod-body.decorator';
-import { ZodValidationPipe } from '@noted/pipes/zod-validation.pipe';
 
 @ApiTags('notes')
 @ApiCookieAuth()
@@ -108,34 +99,30 @@ export class NotesController {
 		summary: 'Create a note',
 		description: 'categoryId is optional; omitted or null means uncategorised.',
 	})
-	@ApiZodBody(CreateNoteSchema, 'note')
 	@ApiResponse({
 		status: 400,
 		description: 'categoryId belongs to another workspace',
 	})
-	@UsePipes(new ZodValidationPipe(CreateNoteSchema))
 	public async create(
-		@Body('note') noteDto: CreateNoteDto,
+		@Body() { note }: CreateNoteReqDto,
 		@Passphrase() passphrase: string,
 	) {
 		if (!passphrase) throw new BadRequestException('No passphrase');
 
-		return await this.notesService.create(noteDto, passphrase);
+		return await this.notesService.create(note, passphrase);
 	}
 
 	@Put('/:id')
 	@HttpCode(HttpStatus.OK)
 	@ApiOperation({ summary: 'Update a note' })
-	@ApiZodBody(UpdateNoteSchema, 'note')
 	@ApiResponse({
 		status: 400,
 		description:
 			'Body id and route id are mismatched, or categoryId belongs to another workspace',
 	})
 	@ApiResponse({ status: 404, description: 'No such note in this workspace' })
-	@UsePipes(new ZodValidationPipe(UpdateNoteSchema))
 	public async update(
-		@Body('note') note: UpdateNoteDto,
+		@Body() { note }: UpdateNoteReqDto,
 		@Passphrase() passphrase: string,
 		@Param('id') id: string,
 	) {

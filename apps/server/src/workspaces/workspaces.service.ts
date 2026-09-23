@@ -1,5 +1,4 @@
 import { Injectable, Logger, UnauthorizedException } from '@nestjs/common';
-import { workspaceRef } from '@noted/logging/workspace-ref';
 import { Workspace } from '@noted/types';
 import { WorkspacesRepository } from '@noted/workspaces/workspaces.repository';
 import bcrypt from 'bcrypt';
@@ -22,7 +21,7 @@ export class WorkspacesService {
 	// Workspaces are only persisted once something (a note or category) enters them
 	async ensureExists(passphrase: string): Promise<void> {
 		await this.workspaceRepository.ensureExists(passphrase);
-		this.logger.verbose(`Workspace ${workspaceRef(passphrase)} exists`);
+		this.logger.verbose(`Workspace ${passphrase} exists`);
 	}
 
 	// Deletes the workspace with everything in it. A locked workspace must have
@@ -39,8 +38,6 @@ export class WorkspacesService {
 			throw new UnauthorizedException('Invalid credentials');
 
 		await this.workspaceRepository.deleteWithContents(passphrase);
-		this.logger.log(
-			`Deleted workspace ${workspaceRef(passphrase)} and its contents`,
-		);
+		this.logger.log(`Deleted workspace ${passphrase} and its contents`);
 	}
 }

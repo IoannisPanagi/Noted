@@ -4,10 +4,11 @@ import {
 	Body,
 	Controller,
 	Delete,
+	Get,
 	HttpCode,
 	HttpStatus,
+	NotFoundException,
 	Res,
-	UsePipes,
 } from '@nestjs/common';
 import {
 	ApiCookieAuth,
@@ -16,12 +17,7 @@ import {
 	ApiTags,
 } from '@nestjs/swagger';
 import { Passphrase } from '@noted/decorators/passphrase.decorator';
-import { ApiZodBody } from '@noted/openapi/zod-body.decorator';
-import { ZodValidationPipe } from '@noted/pipes/zod-validation.pipe';
-import {
-	type DeleteWorkspaceDto,
-	DeleteWorkspaceSchema,
-} from '@noted/workspaces/dtos/deleteWorkspace.dto';
+import { DeleteWorkspaceDto } from '@noted/workspaces/dtos/deleteWorkspace.dto';
 import { WorkspacesService } from '@noted/workspaces/workspaces.service';
 import type { Response } from 'express';
 
@@ -31,6 +27,24 @@ import type { Response } from 'express';
 export class WorkspacesController {
 	constructor(private readonly workspacesService: WorkspacesService) {}
 
+	@Get('/me')
+	@HttpCode(HttpStatus.OK)
+	@ApiOperation({
+		summary: 'Gets accessible workspace',
+		description:
+			'Gets the workspace that is accessible from the authentication cookie',
+	})
+	@ApiResponse({
+		status: 200,
+		description: 'The accessible workspace is returned',
+	})
+	public async findWorkspace(@Passphrase() passphrase: string) {
+		const workspace = await this.workspacesService.findByPassphrase(passphrase);
+
+		if (!workspace) throw new NotFoundException('Workspace does not exist');
+		return workspace;
+	}
+
 	// Deletes the workspace entry entirely - notes, categories and the row itself
 	@Delete()
 	@HttpCode(HttpStatus.NO_CONTENT)
@@ -39,12 +53,10 @@ export class WorkspacesController {
 		description:
 			'Removes its notes, categories and the workspace row, and clears the auth cookie. A locked workspace must confirm its password.',
 	})
-	@ApiZodBody(DeleteWorkspaceSchema)
 	@ApiResponse({
 		status: 401,
 		description: 'Workspace is locked and the password did not match',
 	})
-	@UsePipes(new ZodValidationPipe(DeleteWorkspaceSchema))
 	public async delete(
 		@Body() workspaceDto: DeleteWorkspaceDto,
 		@Passphrase() passphrase: string,

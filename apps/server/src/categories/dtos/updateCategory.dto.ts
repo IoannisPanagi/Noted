@@ -1,3 +1,4 @@
+import { createZodDto } from 'nestjs-zod';
 import { z } from 'zod';
 
 export const UpdateCategorySchema = z.object({
@@ -9,4 +10,4 @@ export const UpdateCategorySchema = z.object({
 		.transform((description) => description || null),
 });
 
-export type UpdateCategoryDto = z.infer<typeof UpdateCategorySchema>;
+export class UpdateCategoryDto extends createZodDto(UpdateCategorySchema) {}

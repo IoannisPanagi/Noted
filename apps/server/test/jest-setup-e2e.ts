@@ -11,3 +11,5 @@ process.env.DB_FILE_NAME = join(
 process.env.JWT_SECRET = 'test-jwt-secret';
 process.env.PWF_SECRET = 'test-password-fingerprint-secret';
 process.env.JWT_EXPIRY = '43200000';
+// Keeps request logs out of the test output
+process.env.LOG_LEVEL ??= 'silent';

@@ -1,3 +1,4 @@
+import { createZodDto } from 'nestjs-zod';
 import { z } from 'zod';
 
 export const CreateNoteSchema = z.object({
@@ -11,4 +12,9 @@ export const CreateNoteSchema = z.object({
 		.transform((categoryId) => categoryId ?? null),
 });
 
-export type CreateNoteDto = z.infer<typeof CreateNoteSchema>;
+export class CreateNoteDto extends createZodDto(CreateNoteSchema) {}
+
+// The API takes the note wrapped as { note }
+export const CreateNoteReqSchema = z.object({ note: CreateNoteSchema });
+
+export class CreateNoteReqDto extends createZodDto(CreateNoteReqSchema) {}

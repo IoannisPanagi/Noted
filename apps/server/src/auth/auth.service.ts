@@ -1,6 +1,5 @@
 import { Injectable, Logger, UnauthorizedException } from '@nestjs/common';
 import { LoginReqDto } from '@noted/auth/dtos/loginReq.dto';
-import { workspaceRef } from '@noted/logging/workspace-ref';
 import { TokenResDto } from '@noted/notes/dtos/tokenRes.dto';
 import { TokensService } from '@noted/tokens/tokens.service';
 import { WorkspacesService } from '@noted/workspaces/workspaces.service';
@@ -29,9 +28,7 @@ export class AuthService {
 				password: await bcrypt.hash(req.password, 10),
 			});
 
-			this.logger.log(
-				`Created locked workspace ${workspaceRef(req.passphrase)}`,
-			);
+			this.logger.log(`Created locked workspace ${req.passphrase}`);
 
 			return {
 				token: await this.tokensService.generateToken(
@@ -45,9 +42,7 @@ export class AuthService {
 		// once a note or category enters it. Until then, and while it has no
 		// password, it's open.
 		if (!workspace || workspace.password === null) {
-			this.logger.debug(
-				`Logged in to open workspace ${workspaceRef(req.passphrase)}`,
-			);
+			this.logger.debug(`Logged in to open workspace ${req.passphrase}`);
 
 			return {
 				token: await this.tokensService.generateToken(req.passphrase, null),
@@ -58,9 +53,7 @@ export class AuthService {
 			req.password &&
 			(await bcrypt.compare(req.password, workspace.password))
 		) {
-			this.logger.debug(
-				`Logged in to locked workspace ${workspaceRef(req.passphrase)}`,
-			);
+			this.logger.debug(`Logged in to locked workspace ${req.passphrase}`);
 
 			return {
 				token: await this.tokensService.generateToken(
@@ -70,9 +63,7 @@ export class AuthService {
 			};
 		}
 
-		this.logger.warn(
-			`Rejected login for locked workspace ${workspaceRef(req.passphrase)}`,
-		);
+		this.logger.warn(`Rejected login for locked workspace ${req.passphrase}`);
 
 		throw new UnauthorizedException('Invalid credentials');
 	}

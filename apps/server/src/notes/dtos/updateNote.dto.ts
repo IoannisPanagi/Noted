@@ -1,3 +1,4 @@
+import { createZodDto } from 'nestjs-zod';
 import { z } from 'zod';
 
 export const UpdateNoteSchema = z.object({
@@ -11,4 +12,9 @@ export const UpdateNoteSchema = z.object({
 	categoryId: z.string().nullable(),
 });
 
-export type UpdateNoteDto = z.infer<typeof UpdateNoteSchema>;
+export class UpdateNoteDto extends createZodDto(UpdateNoteSchema) {}
+
+// The API takes the note wrapped as { note }
+export const UpdateNoteReqSchema = z.object({ note: UpdateNoteSchema });
+
+export class UpdateNoteReqDto extends createZodDto(UpdateNoteReqSchema) {}

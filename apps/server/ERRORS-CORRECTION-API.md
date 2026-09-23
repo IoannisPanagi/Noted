@@ -6,32 +6,42 @@ This is a living document — extend it as new endpoints and failure modes show 
 
 ## 1. Validation at the boundary
 
-- Every request body that reaches a controller **must** be checked against a
-  Zod schema via `ZodValidationPipe`, applied with `@UsePipes(new ZodValidationPipe(Schema))`
-  on the route handler. Never trust a `@Body()` value's TypeScript type alone —
-  types disappear at runtime, and the wire payload does not respect them.
-- Route/query params (`@Param`, `@Query`) are not currently covered by
-  `ZodValidationPipe` (it only intercepts `metadata.type === 'body'`). Until a
-  dedicated param pipe exists, controllers must keep doing explicit `if (!x)`
-  guards for required params (as `NotesController` already does for
-  `passphrase`). For typed optional query params, prefer Nest's built-in parse
-  pipes (e.g. `@Query('complete', new ParseBoolPipe({ optional: true }))`),
-  which reject anything but `true`/`false` with a 400.
-- A DTO file exports both the schema (`FooSchema`) and its inferred type
-  (`FooDto = z.infer<typeof FooSchema>`). The type is derived from the schema,
-  never hand-written separately — that's the whole point of using Zod here,
-  and it's how the two stay in sync.
+- Every request body that reaches a controller **must** be typed with a Zod
+  DTO class. `nestjs-zod`'s `ZodValidationPipe` is registered globally
+  (`APP_PIPE` in `AppModule`) and validates any parameter whose type is a
+  Zod DTO, so the handler only has to declare `@Body() dto: FooDto` — and must
+  import `FooDto` as a value, not `import type`, or the metadata is lost.
+  Never trust a `@Body()` value's TypeScript type alone — types disappear at
+  runtime, and the wire payload does not respect them.
+- The same pipe covers `@Param`/`@Query` when they're typed with a Zod DTO;
+  none are yet, so controllers keep doing explicit `if (!x)` guards for
+  required params (as `NotesController` already does for `passphrase`). For
+  typed optional query params, prefer Nest's built-in parse pipes (e.g.
+  `@Query('complete', new ParseBoolPipe({ optional: true }))`), which reject
+  anything but `true`/`false` with a 400.
+- A DTO file exports both the schema (`FooSchema`) and its DTO class
+  (`class FooDto extends createZodDto(FooSchema) {}`). The class is derived
+  from the schema, never hand-written separately — that's the whole point of
+  using Zod here, and it's how validation, the TypeScript type and the OpenAPI
+  schema stay in sync.
+- A body wrapped in a property (e.g. notes' `{ note }`) gets its own wrapper
+  schema and DTO (`CreateNoteReqDto`) rather than `@Body('note')`, which
+  Swagger can't document.
 - Schemas should only describe what the client is actually expected to send.
   Don't let a field exist in a schema "just in case" (see §4) — every field is
   something that will need to be trusted and moved further into the system.
 
 ## 2. Error response shape
 
-Two shapes are in play. `ZodValidationPipe` builds its own body, which has no
-`statusCode`/`error` keys (the HTTP status is still 400):
+Two shapes are in play. `nestjs-zod`'s `ZodValidationException` carries the
+Zod issues in `errors`, and has no `error` key:
 
 ```json
-{ "message": "Validation failed", "errors": { "label": ["Too small: …"] } }
+{
+  "statusCode": 400,
+  "message": "Validation failed",
+  "errors": [{ "code": "too_small", "path": ["label"], "message": "Too small: …" }]
+}
 ```
 
 Everything else is Nest's default for an exception constructed with a string:
@@ -50,8 +60,8 @@ the envelope repeats the status and carries `errors` — and a client can read
 `message` from either. If it becomes a real problem (a second consumer, or
 clients branching on prose), revisit with a global filter (`APP_FILTER`)
 emitting one envelope, e.g. `{ statusCode, code, message, details? }`, where
-`ZodValidationPipe` throws a `BadRequestException` with the field errors and
-the filter alone decides the wire format. Not planned now.
+the filter maps `ZodValidationException` and alone decides the wire format.
+Not planned now.
 
 ## 3. Domain types vs. DB row types
 
@@ -162,7 +172,7 @@ assertion only — it doesn't check the decoded object's shape at runtime.
 ## 8. Known gaps / not yet addressed
 
 - No global exception filter — see §2.
-- No param-level Zod pipe — route params are still validated ad hoc.
+- No Zod DTOs for route params or queries — they're still validated ad hoc.
 - No request body size limit or rate limiting configured in `main.ts`.
 - No upper bound on `text`/`backgroundColor` string length in note schemas.
 - No case/whitespace normalization on `passphrase` or category `label`
@@ -223,34 +233,23 @@ server-side session state; see the Security gaps section in `TODO.md`.
 
 ## 10. Logging
 
-Nest's own `ConsoleLogger` does the work; there is no pino port. `main.ts`
-builds it once with the levels `LOG_LEVEL` selects.
+`nestjs-pino` does all of it: `LoggerModule` in `AppModule` configures
+pino-http, and `main.ts` hands Nest that logger (`bufferLogs` +
+`app.useLogger`), so Nest's own lifecycle lines go through pino too. There are
+no hand-written log lines in services, guards or modules.
 
-- **`LOG_LEVEL` is optional and defaults to `info`.** Accepted:
-  `silent | fatal | error | warn | info | debug | verbose`. `info` is Nest's
-  `log`, kept under the name the rest of the world uses. Choosing a level
-  enables it and everything more severe; `silent` disables logging entirely.
-  An unrecognised value throws at startup, like every other bad
-  configuration value — the app never guesses.
-- **One logger per class**: `private readonly logger = new Logger(Foo.name)`,
-  so every line says where it came from.
-- **Levels, as used here:**
-  - `log` (info) — lifecycle and workspace-level events: startup, database
-    open/migrations, workspace created or deleted, all notes cleared.
-  - `warn` — something a human may care about that isn't a crash: a rejected
-    login, a failed database ping.
-  - `debug` — per-request/per-entity detail: login, note and category
-    create/update/delete, why a request was rejected by the guard.
-  - `verbose` — internal bookkeeping, e.g. the lazy workspace insert.
-  - `error`/`fatal` — reserved for failures the app can't handle; prefer
-    throwing an `HttpException` where a caller should be told instead.
-- **Never log credentials.** No passphrase, password, hash, JWT or
-  fingerprint reaches a log line. (The old SvelteKit `hooks.server.js` logged
-  both the raw token and the decoded payload; that is deliberately not
-  ported.) Where a workspace must be identifiable across lines, log
-  `workspaceRef(passphrase)` — a short HMAC under its own subkey
-  (`noted:log-reference:v1`), so entries correlate without the log carrying
-  the key to the workspace.
-- **Note and category ids are fine to log.** They're opaque, scoped to a
-  workspace, and useless without access to it. Note *text* is user content
-  and stays out.
+- **Every request is logged once on completion** by pino-http: method, URL,
+  status and response time, at `info` (`warn`/`error` for 4xx/5xx). That is
+  the audit trail; a domain event (login, workspace deleted, …) shows up as
+  its request.
+- **`LOG_LEVEL` is optional and defaults to `info`.** It's pino's level:
+  `silent | fatal | error | warn | info | debug | trace`. pino rejects an
+  unrecognised value at startup. The test setup sets `silent`.
+- **Output**: JSON lines when `NODE_ENV` is `production` (or `test`),
+  `pino-pretty` otherwise.
+- **Never log credentials.** The auth cookie is a JWT whose payload carries
+  the passphrase, so `req.headers.cookie` and `res.headers["set-cookie"]` are
+  redacted. Bodies are never logged. (The old SvelteKit `hooks.server.js`
+  logged both the raw token and the decoded payload; that is deliberately not
+  ported.) If you add logging, keep passphrases, passwords, hashes, tokens
+  and note text out of it.

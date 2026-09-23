@@ -30,7 +30,7 @@ export async function login(
 	password: string | null = null,
 ): Promise<string> {
 	const response = await api(app)
-		.post('/api')
+		.post('/api/login')
 		.send({ passphrase, password })
 		.expect(200);
 

@@ -51,22 +51,22 @@ describe('Auth (e2e)', () => {
 		await login(app, 'auth-locked', 'secret');
 
 		await api(app)
-			.post('/api')
+			.post('/api/login')
 			.send({ passphrase: 'auth-locked', password: 'wrong' })
 			.expect(401);
 
 		await api(app)
-			.post('/api')
+			.post('/api/login')
 			.send({ passphrase: 'auth-locked', password: null })
 			.expect(401);
 
 		await api(app)
-			.post('/api')
+			.post('/api/login')
 			.send({ passphrase: 'auth-locked', password: 'secret' })
 			.expect(200);
 	});
 
 	it('rejects a login without a passphrase', async () => {
-		await api(app).post('/api').send({ password: null }).expect(400);
+		await api(app).post('/api/login').send({ password: null }).expect(400);
 	});
 });

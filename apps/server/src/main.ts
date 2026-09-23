@@ -3,25 +3,22 @@ import {
 	APP_NAME,
 	APP_PORT,
 	APP_VERSION,
-	CORS_ORIGINS,
-	LOG_LEVEL,
+	CORS_ORIGINS, LOG_LEVEL,
 } from '@constants';
-import { ConsoleLogger } from '@nestjs/common';
+import { Logger as Console } from '@nestjs/common'
 import { NestFactory } from '@nestjs/core';
 import { DocumentBuilder, SwaggerModule } from '@nestjs/swagger';
-import { logLevelsFor } from '@noted/logging/log-levels';
 import cookieParser from 'cookie-parser';
+import { Logger } from 'nestjs-pino';
+import { cleanupOpenApiDoc } from 'nestjs-zod';
 import { AppModule } from './app.module';
 
 async function bootstrap() {
-	const logger = new ConsoleLogger({
-		prefix: APP_NAME,
-		logLevels: logLevelsFor(LOG_LEVEL),
-	});
+	const app = await NestFactory.create(AppModule, { bufferLogs: true });
 
-	const app = await NestFactory.create(AppModule, {
-		logger,
-	});
+	const appLogger = app.get(Logger);
+
+	app.useLogger(app.get(Logger));
 	app.setGlobalPrefix('api');
 
 	app.use(cookieParser());
@@ -44,20 +41,22 @@ async function bootstrap() {
 	SwaggerModule.setup(
 		'docs',
 		app,
-		() => SwaggerModule.createDocument(app, documentBuilder),
+		() => cleanupOpenApiDoc(SwaggerModule.createDocument(app, documentBuilder)),
 		{
 			useGlobalPrefix: true,
 		},
 	);
 
-	logger.log(
-		`[${APP_NAME}] ${APP_VERSION} listening on port ${APP_PORT}` +
-			(CORS_ORIGINS.length > 0
-				? `, accepting credentialed requests from ${CORS_ORIGINS.join(', ')}`
-				: ''),
-	);
-
 	await app.listen(APP_PORT);
+
+	const logger = new Console('ApplicationRuntime')
+
+	logger.log(
+		`${APP_NAME} - ${APP_VERSION} listening on port ${APP_PORT}` +
+		(CORS_ORIGINS.length > 0
+			? `, accepting credentialed requests from ${CORS_ORIGINS.join(', ')}`
+			: ''),
+	);
 
 	logger.debug(`Log level is '${LOG_LEVEL}'`);
 	logger.log(`API documentation available at /api/docs`);

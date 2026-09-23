@@ -1,6 +1,5 @@
 import { BadRequestException, Injectable, Logger } from '@nestjs/common';
 import { CategoriesService } from '@noted/categories/categories.service';
-import { workspaceRef } from '@noted/logging/workspace-ref';
 import { CreateNoteDto } from '@noted/notes/dtos/createNote.dto';
 import { UpdateNoteDto } from '@noted/notes/dtos/updateNote.dto';
 import { NotesRepository } from '@noted/notes/notes.repository';
@@ -58,7 +57,7 @@ export class NotesService {
 		});
 
 		this.logger.debug(
-			`Created note ${savedNote.id} in workspace ${workspaceRef(passphrase)}`,
+			`Created note ${savedNote.id} in workspace ${savedNote.passphrase}`,
 		);
 
 		return savedNote;
@@ -80,7 +79,7 @@ export class NotesService {
 		});
 
 		this.logger.debug(
-			`Updated note ${savedNote.id} in workspace ${workspaceRef(passphrase)}`,
+			`Updated note ${savedNote.id} in workspace ${savedNote.passphrase}`,
 		);
 
 		return savedNote;
@@ -90,9 +89,7 @@ export class NotesService {
 		const deleted = await this.notesRepository.delete(passphrase, id);
 
 		if (deleted)
-			this.logger.debug(
-				`Deleted note ${id} from workspace ${workspaceRef(passphrase)}`,
-			);
+			this.logger.debug(`Deleted note ${id} from workspace ${passphrase}`);
 
 		return deleted;
 	}
@@ -100,9 +97,7 @@ export class NotesService {
 	// Only the notes go; categories and the workspace row are left alone
 	async deleteAllByPassphrase(passphrase: string) {
 		await this.notesRepository.deleteAllByPassphrase(passphrase);
-		this.logger.log(
-			`Cleared all notes in workspace ${workspaceRef(passphrase)}`,
-		);
+		this.logger.log(`Cleared all notes in workspace ${passphrase}`);
 	}
 
 	private async assertCategoryInWorkspace(

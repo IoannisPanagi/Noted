@@ -9,7 +9,6 @@ import {
 	Post,
 	Req,
 	Res,
-	UsePipes,
 } from '@nestjs/common';
 import {
 	ApiCookieAuth,
@@ -18,16 +17,12 @@ import {
 	ApiTags,
 } from '@nestjs/swagger';
 import { AuthService } from '@noted/auth/auth.service';
-import {
-	type LoginReqDto,
-	LoginReqSchema,
-} from '@noted/auth/dtos/loginReq.dto';
+import { LoginReqDto } from '@noted/auth/dtos/loginReq.dto';
 import { Public } from '@noted/decorators/public.decorator';
-import type { TokenResDto } from '@noted/notes/dtos/tokenRes.dto';
-import { ApiZodBody } from '@noted/openapi/zod-body.decorator';
-import { ZodValidationPipe } from '@noted/pipes/zod-validation.pipe';
+import { TokenResDto } from '@noted/notes/dtos/tokenRes.dto';
 import { TokensService } from '@noted/tokens/tokens.service';
 import type { Request, Response } from 'express';
+import { ZodResponse } from 'nestjs-zod';
 
 @ApiTags('auth')
 @Controller()
@@ -61,20 +56,21 @@ export class AuthController {
 	}
 
 	@Public()
-	@Post()
+	@Post('/login')
 	@ApiOperation({
 		summary: 'Log in to a workspace and receive the auth cookie',
 		description:
 			'A workspace that does not exist is only created when a password is supplied; otherwise it is persisted once a note or category enters it.',
 	})
-	@ApiZodBody(LoginReqSchema)
-	@ApiResponse({ status: 200, description: 'Authenticated; cookie set' })
+	@ZodResponse({
+		status: HttpStatus.OK,
+		description: 'Authenticated; cookie set',
+		type: TokenResDto,
+	})
 	@ApiResponse({
 		status: 401,
 		description: 'Workspace is locked and the password did not match',
 	})
-	@HttpCode(HttpStatus.OK)
-	@UsePipes(new ZodValidationPipe(LoginReqSchema))
 	async login(
 		@Body() req: LoginReqDto,
 		@Res({ passthrough: true }) res: Response,
@@ -86,7 +82,7 @@ export class AuthController {
 		return token;
 	}
 
-	@Delete()
+	@Delete('/logout')
 	@HttpCode(HttpStatus.NO_CONTENT)
 	@ApiCookieAuth()
 	@ApiOperation({ summary: 'Log out by clearing the auth cookie' })
