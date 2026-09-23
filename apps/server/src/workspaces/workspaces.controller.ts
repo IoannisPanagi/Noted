@@ -39,12 +39,13 @@ export class WorkspacesController {
 		status: 200,
 		description: 'The accessible workspace is returned',
 	})
+	// Workspace always "exists" regardless if it has notes or not
 	public async findWorkspace(
 		@Passphrase() passphrase: string,
 	): Promise<Workspace> {
 		const workspace = await this.workspacesService.findByPassphrase(passphrase);
 
-		if (!workspace) throw new NotFoundException('Workspace does not exist');
+		if (!workspace) return { passphrase, description: null, password: null };
 		return { ...workspace, password: null };
 	}
 

@@ -8,15 +8,16 @@ import {
 	ExecutionContext,
 	Injectable,
 	Logger,
-	UnauthorizedException,
 } from '@nestjs/common';
 import { Reflector } from '@nestjs/core';
+import { WsException } from '@nestjs/websockets';
 import { TokensService } from '@noted/tokens/tokens.service';
-import { Request } from 'express';
+import * as cookie from 'cookie';
+import { Socket } from 'socket.io';
 
 @Injectable()
-export class AuthGuard implements CanActivate {
-	private readonly logger = new Logger(AuthGuard.name);
+export class AuthWsGuard implements CanActivate {
+	private readonly logger = new Logger(AuthWsGuard.name);
 
 	constructor(
 		private readonly tokensService: TokensService,
@@ -32,22 +33,26 @@ export class AuthGuard implements CanActivate {
 			return true;
 		}
 
-		const request: Request = context.switchToHttp().getRequest();
+		const client = context.switchToWs().getClient<Socket>();
 		try {
-			const token = request.cookies[APP_AUTH_COOKIE_NAME] as string;
+			const cookies = cookie.parseCookie(client.handshake.headers.cookie ?? '');
+
+			if (!cookies) return false;
+
+			const token = cookies[APP_AUTH_COOKIE_NAME];
 
 			if (!token) return false;
 
-			request[APP_WORKSPACE_LOCAL_NAME] =
+			client.data[APP_WORKSPACE_LOCAL_NAME] =
 				await this.tokensService.validateToken(token);
 
 			return true;
 		} catch {
 			this.logger.debug(
-				`Rejected ${request.method} ${request.url}: no valid session cookie`,
+				`Rejected websocket connection: no valid session cookie`,
 			);
 
-			throw new UnauthorizedException();
+			throw new WsException('Unauthorized');
 		}
 	}
 }
