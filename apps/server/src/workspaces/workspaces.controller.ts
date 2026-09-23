@@ -17,6 +17,7 @@ import {
 	ApiTags,
 } from '@nestjs/swagger';
 import { Passphrase } from '@noted/decorators/passphrase.decorator';
+import { Workspace } from '@noted/types';
 import { DeleteWorkspaceDto } from '@noted/workspaces/dtos/deleteWorkspace.dto';
 import { WorkspacesService } from '@noted/workspaces/workspaces.service';
 import type { Response } from 'express';
@@ -38,11 +39,13 @@ export class WorkspacesController {
 		status: 200,
 		description: 'The accessible workspace is returned',
 	})
-	public async findWorkspace(@Passphrase() passphrase: string) {
+	public async findWorkspace(
+		@Passphrase() passphrase: string,
+	): Promise<Workspace> {
 		const workspace = await this.workspacesService.findByPassphrase(passphrase);
 
 		if (!workspace) throw new NotFoundException('Workspace does not exist');
-		return workspace;
+		return { ...workspace, password: null };
 	}
 
 	// Deletes the workspace entry entirely - notes, categories and the row itself
