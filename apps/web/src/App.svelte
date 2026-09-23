@@ -4,11 +4,8 @@ import { ModeWatcher, toggleMode } from 'mode-watcher';
 import icon from '$lib/assets/icon.svg';
 import { Button } from '$lib/components/ui/button/index.js';
 import { Toaster } from '$lib/components/ui/sonner/index.js';
-import Login from './pages/login.svelte';
-
-// TODO: the notes pages still import SvelteKit-only modules, so they stay out
-//  of here until they are ported
-let currentPage = $state('login');
+import { Router } from '@roxi/routify';
+import routes from '../.routify/routes.default.js';
 </script>
 
 <svelte:head>
@@ -32,6 +29,4 @@ let currentPage = $state('login');
 <ModeWatcher />
 <Toaster position="top-center" />
 
-{#if currentPage === 'login'}
-	<Login />
-{/if}
+<Router {routes} />
