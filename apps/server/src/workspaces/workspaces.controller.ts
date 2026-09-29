@@ -8,6 +8,7 @@ import {
 	HttpCode,
 	HttpStatus,
 	NotFoundException,
+	Put,
 	Res,
 } from '@nestjs/common';
 import {
@@ -19,6 +20,7 @@ import {
 import { Passphrase } from '@noted/decorators/passphrase.decorator';
 import { Workspace } from '@noted/types';
 import { DeleteWorkspaceDto } from '@noted/workspaces/dtos/deleteWorkspace.dto';
+import { UpdateWorkspaceDto } from '@noted/workspaces/dtos/updateWorkspace.dto';
 import { WorkspacesService } from '@noted/workspaces/workspaces.service';
 import type { Response } from 'express';
 
@@ -46,6 +48,19 @@ export class WorkspacesController {
 		const workspace = await this.workspacesService.findByPassphrase(passphrase);
 
 		if (!workspace) return { passphrase, description: null, password: null };
+		return { ...workspace, password: null };
+	}
+
+	@Put()
+	@HttpCode(HttpStatus.OK)
+	public async updateWorkspace(
+		@Body() workspaceDto: UpdateWorkspaceDto,
+		@Passphrase() passphrase: string,
+	): Promise<Workspace> {
+		const workspace = await this.workspacesService.save({
+			...workspaceDto,
+			passphrase,
+		});
 		return { ...workspace, password: null };
 	}
 
