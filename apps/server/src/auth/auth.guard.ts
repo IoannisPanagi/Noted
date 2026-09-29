@@ -11,6 +11,7 @@ import {
 	UnauthorizedException,
 } from '@nestjs/common';
 import { Reflector } from '@nestjs/core';
+import { AuthWsGuard } from '@noted/auth/auth.ws.guard';
 import { TokensService } from '@noted/tokens/tokens.service';
 import { Request } from 'express';
 
@@ -21,6 +22,7 @@ export class AuthGuard implements CanActivate {
 	constructor(
 		private readonly tokensService: TokensService,
 		private readonly reflector: Reflector,
+		private readonly AuthWsGuard: AuthWsGuard,
 	) {}
 
 	async canActivate(context: ExecutionContext): Promise<boolean> {
@@ -31,6 +33,9 @@ export class AuthGuard implements CanActivate {
 		if (isPublic) {
 			return true;
 		}
+
+		if (context.getType() === 'ws')
+			return this.AuthWsGuard.canActivate(context);
 
 		const request: Request = context.switchToHttp().getRequest();
 		try {

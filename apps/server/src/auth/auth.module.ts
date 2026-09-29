@@ -18,7 +18,7 @@ import { WorkspacesModule } from '@noted/workspaces/workspaces.module';
 		},
 		AuthWsGuard,
 	],
-	exports: [AuthService],
+	exports: [AuthService, AuthWsGuard],
 	controllers: [AuthController],
 })
 export class AuthModule {}
