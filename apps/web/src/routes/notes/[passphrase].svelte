@@ -11,10 +11,10 @@ onMount(() => {
 	// replace, so going back doesn't land here and log in again
 	api
 		.post('/login', JSON.stringify({ passphrase }))
-		.then(() => $goto('/notes', {}, { mode: 'replace' }))
+		.then(() => goto('/notes', {}, { mode: 'replace' }))
 		.catch((err) => {
 			toast.error(err?.message ?? 'Could not open that workspace');
-			$goto('/', {}, { mode: 'replace' });
+			goto('/', {}, { mode: 'replace' });
 		});
 });
 </script>
