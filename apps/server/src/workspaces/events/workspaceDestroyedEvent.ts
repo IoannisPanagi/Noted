@@ -1,3 +1,3 @@
-export type WorkspaceDeletedEvent = {
+export type WorkspaceDestroyedEvent = {
 	passphrase: string;
 };
