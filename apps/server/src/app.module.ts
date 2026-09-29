@@ -7,6 +7,7 @@ import { AuthModule } from '@noted/auth/auth.module';
 import { CategoriesModule } from '@noted/categories/categories.module';
 import { HealthModule } from '@noted/health/health.module';
 import { NotesModule } from '@noted/notes/notes.module';
+import { RealtimeModule } from '@noted/realtime/realtime.module';
 import { WorkspacesModule } from '@noted/workspaces/workspaces.module';
 import { LoggerModule } from 'nestjs-pino';
 import { ZodSerializerInterceptor, ZodValidationPipe } from 'nestjs-zod';
@@ -40,6 +41,7 @@ import { ZodSerializerInterceptor, ZodValidationPipe } from 'nestjs-zod';
 		NotesModule,
 		AuthModule,
 		HealthModule,
+		RealtimeModule,
 	],
 	providers: [
 		{ provide: APP_PIPE, useClass: ZodValidationPipe },
