@@ -1,4 +1,5 @@
 import { Injectable, Logger, UnauthorizedException } from '@nestjs/common';
+import { EventEmitter2 } from '@nestjs/event-emitter';
 import { Workspace } from '@noted/types';
 import { UpdateWorkspaceDto } from '@noted/workspaces/dtos/updateWorkspace.dto';
 import { WorkspacesRepository } from '@noted/workspaces/workspaces.repository';
@@ -8,7 +9,10 @@ import bcrypt from 'bcrypt';
 export class WorkspacesService {
 	private readonly logger = new Logger(WorkspacesService.name);
 
-	constructor(private readonly workspaceRepository: WorkspacesRepository) {}
+	constructor(
+		private readonly workspaceRepository: WorkspacesRepository,
+		private readonly eventEmitter: EventEmitter2,
+	) {}
 
 	async findByPassphrase(passphrase: string) {
 		return this.workspaceRepository.findByPassphrase(passphrase);
@@ -26,6 +30,11 @@ export class WorkspacesService {
 		const [savedWorkspace] = await this.workspaceRepository.save({
 			...workspace,
 			password: await this.hashPassword(workspace),
+		});
+
+		await this.eventEmitter.emitAsync('workspace.updated', {
+			workspace: { ...savedWorkspace, password: null },
+			passphrase: savedWorkspace.passphrase,
 		});
 
 		return savedWorkspace;
@@ -70,5 +79,7 @@ export class WorkspacesService {
 
 		await this.workspaceRepository.deleteWithContents(passphrase);
 		this.logger.log(`Deleted workspace ${passphrase} and its contents`);
+
+		await this.eventEmitter.emitAsync('workspace.destroyed', { passphrase });
 	}
 }

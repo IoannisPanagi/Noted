@@ -1,7 +1,9 @@
 import { BadRequestException, Injectable, Logger } from '@nestjs/common';
+import { EventEmitter2 } from '@nestjs/event-emitter';
 import { CategoriesService } from '@noted/categories/categories.service';
 import { CreateNoteDto } from '@noted/notes/dtos/createNote.dto';
 import { UpdateNoteDto } from '@noted/notes/dtos/updateNote.dto';
+import { NoteCreatedEvent } from '@noted/notes/events/noteCreated.event';
 import { NotesRepository } from '@noted/notes/notes.repository';
 import { Note } from '@noted/types';
 import { WorkspacesService } from '@noted/workspaces/workspaces.service';
@@ -14,6 +16,7 @@ export class NotesService {
 		private readonly notesRepository: NotesRepository,
 		private readonly categoriesService: CategoriesService,
 		private readonly workspacesService: WorkspacesService,
+		private readonly eventEmitter: EventEmitter2,
 	) {}
 
 	async findByPassphraseAndId(
@@ -60,6 +63,11 @@ export class NotesService {
 			`Created note ${savedNote.id} in workspace ${savedNote.passphrase}`,
 		);
 
+		await this.eventEmitter.emitAsync('note.created', {
+			note: savedNote,
+			passphrase,
+		});
+
 		return savedNote;
 	}
 
@@ -82,6 +90,11 @@ export class NotesService {
 			`Updated note ${savedNote.id} in workspace ${savedNote.passphrase}`,
 		);
 
+		await this.eventEmitter.emitAsync('note.updated', {
+			note: savedNote,
+			passphrase,
+		});
+
 		return savedNote;
 	}
 
@@ -91,6 +104,11 @@ export class NotesService {
 		if (deleted)
 			this.logger.debug(`Deleted note ${id} from workspace ${passphrase}`);
 
+		await this.eventEmitter.emitAsync('note.deleted', {
+			noteId: id,
+			passphrase,
+		});
+
 		return deleted;
 	}
 
@@ -98,6 +116,8 @@ export class NotesService {
 	async deleteAllByPassphrase(passphrase: string) {
 		await this.notesRepository.deleteAllByPassphrase(passphrase);
 		this.logger.log(`Cleared all notes in workspace ${passphrase}`);
+
+		await this.eventEmitter.emitAsync('notes.cleared', { passphrase });
 	}
 
 	private async assertCategoryInWorkspace(

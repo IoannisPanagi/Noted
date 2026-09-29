@@ -1,4 +1,5 @@
 import { ConflictException, Injectable } from '@nestjs/common';
+import { EventEmitter2 } from '@nestjs/event-emitter';
 import { CategoriesRepository } from '@noted/categories/categories.repository';
 import { CreateCategoryDto } from '@noted/categories/dtos/createCategory.dto';
 import { UpdateCategoryDto } from '@noted/categories/dtos/updateCategory.dto';
@@ -10,6 +11,7 @@ export class CategoriesService {
 	constructor(
 		private readonly categoriesRepository: CategoriesRepository,
 		private readonly workspacesService: WorkspacesService,
+		private readonly eventEmitter: EventEmitter2,
 	) {}
 
 	async findByPassphraseAndId(passphrase: string, id: string) {
@@ -44,6 +46,11 @@ export class CategoriesService {
 			passphrase,
 		});
 
+		await this.eventEmitter.emitAsync('category.created', {
+			category: savedCategory,
+			passphrase,
+		});
+
 		return savedCategory;
 	}
 
@@ -63,10 +70,20 @@ export class CategoriesService {
 			passphrase,
 		});
 
+		await this.eventEmitter.emitAsync('category.updated', {
+			category: savedCategory,
+			passphrase,
+		});
+
 		return savedCategory;
 	}
 
 	async delete(passphrase: string, id: string): Promise<boolean> {
-		return this.categoriesRepository.delete(passphrase, id);
+		const deleted = await this.categoriesRepository.delete(passphrase, id);
+
+		if (deleted)
+			await this.eventEmitter.emitAsync('category.deleted', { id, passphrase });
+
+		return deleted;
 	}
 }
