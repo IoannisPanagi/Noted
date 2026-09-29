@@ -25,7 +25,7 @@ export class AuthService {
 			const savedWorkspace = await this.workspacesService.save({
 				passphrase: req.passphrase,
 				description: null,
-				password: await bcrypt.hash(req.password, 10),
+				password: req.password,
 			});
 
 			this.logger.log(`Created locked workspace ${req.passphrase}`);

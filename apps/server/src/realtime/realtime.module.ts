@@ -1,14 +1,11 @@
 import { Module } from '@nestjs/common';
-import { AuthModule } from '@noted/auth/auth.module';
 import { CategoriesModule } from '@noted/categories/categories.module';
 import { NotesModule } from '@noted/notes/notes.module';
-import { NotesService } from '@noted/notes/notes.service';
+import { CategoriesListener } from '@noted/realtime/listeners/categories.listener';
 import { NotesListener } from '@noted/realtime/listeners/notes.listener';
+import { WorkspacesListener } from '@noted/realtime/listeners/workspaces.listener';
 import { RealtimeGateway } from '@noted/realtime/realtime.gateway';
-import { TokensModule } from '@noted/tokens/tokens.module';
 import { WorkspacesModule } from '@noted/workspaces/workspaces.module';
-import { CategoriesListener } from './listeners/categories.listener';
-import { WorkspacesListener } from './listeners/workspaces.listener';
 
 @Module({
 	imports: [NotesModule, CategoriesModule, WorkspacesModule],

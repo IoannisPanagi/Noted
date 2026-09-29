@@ -3,7 +3,6 @@ import { EventEmitter2 } from '@nestjs/event-emitter';
 import { CategoriesService } from '@noted/categories/categories.service';
 import { CreateNoteDto } from '@noted/notes/dtos/createNote.dto';
 import { UpdateNoteDto } from '@noted/notes/dtos/updateNote.dto';
-import { NoteCreatedEvent } from '@noted/notes/events/noteCreated.event';
 import { NotesRepository } from '@noted/notes/notes.repository';
 import { Note } from '@noted/types';
 import { WorkspacesService } from '@noted/workspaces/workspaces.service';
@@ -101,13 +100,14 @@ export class NotesService {
 	async delete(passphrase: string, id: string): Promise<boolean> {
 		const deleted = await this.notesRepository.delete(passphrase, id);
 
-		if (deleted)
+		if (deleted) {
 			this.logger.debug(`Deleted note ${id} from workspace ${passphrase}`);
 
-		await this.eventEmitter.emitAsync('note.deleted', {
-			noteId: id,
-			passphrase,
-		});
+			await this.eventEmitter.emitAsync('note.deleted', {
+				noteId: id,
+				passphrase,
+			});
+		}
 
 		return deleted;
 	}

@@ -1,4 +1,4 @@
-import { APP_WORKSPACE_LOCAL_NAME, IS_PUBLIC_KEY } from '@constants';
+import { APP_WORKSPACE_LOCAL_NAME } from '@constants';
 import {
 	createParamDecorator,
 	ExecutionContext,

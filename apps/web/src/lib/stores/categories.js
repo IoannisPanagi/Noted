@@ -1,6 +1,5 @@
 import { get } from 'svelte/store';
 import { createCollection } from '$lib/stores/collection.js';
-import { api } from '$lib/utils/api.js';
 import { socket } from '$lib/utils/socket.js';
 
 // Built-in views that always wrap the workspace's own categories

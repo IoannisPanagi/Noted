@@ -1,4 +1,5 @@
 import { io } from 'socket.io-client';
+import { api } from '$lib/utils/api.js';
 import { API_URL } from '../../constants.js';
 
 // One connection shared by every store. It stays closed until a workspace page
@@ -13,9 +14,17 @@ socket.on('connect', () => {
 	socket.emit('join.workspace');
 });
 
-socket.on('auth.refresh', () => {
-  socket.disconnect();
-  socket.emit('join.workspace');
+// The workspace changed, so our session cookie may be stale. Try a fresh
+// password-less login (works while the workspace is open), then reconnect so
+// the handshake carries the new cookie and the connect handler re-joins.
+socket.on('auth.refresh', async (passphrase) => {
+	try {
+		await api.post('/login', { passphrase, password: null });
+	} catch {
+		// Locked with a password we don't have; the re-join will be refused
+	}
+
+	socket.disconnect().connect();
 });
 
 socket.on('connect_error', (error) => {

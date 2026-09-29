@@ -7,7 +7,6 @@ import {
 	Get,
 	HttpCode,
 	HttpStatus,
-	NotFoundException,
 	Put,
 	Res,
 } from '@nestjs/common';

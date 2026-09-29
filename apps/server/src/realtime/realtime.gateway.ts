@@ -208,7 +208,7 @@ export class RealtimeGateway {
 
 	//* Workspaces *//
 	async emitWorkspaceUpdated(event: WorkspaceUpdatedEvent) {
-		this.server.to(event.passphrase).emit('auth.refresh');
+		this.server.to(event.passphrase).emit('auth.refresh', event.passphrase);
 		this.server.to(event.passphrase).emit('workspace.updated', event.workspace);
 	}
 
