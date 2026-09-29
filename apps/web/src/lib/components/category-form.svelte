@@ -24,7 +24,7 @@ async function handleSubmit() {
 	try {
 		let cat = null;
 		if (category) {
-			cat = await categories.editCategory({
+			cat = await categories.updateCategory({
 				...category,
 				description: description,
 			});

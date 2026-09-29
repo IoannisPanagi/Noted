@@ -1,105 +1,67 @@
-import { writable } from 'svelte/store';
+import { get } from 'svelte/store';
+import { createCollection } from '$lib/stores/collection.js';
 import { api } from '$lib/utils/api.js';
+import { socket } from '$lib/utils/socket.js';
+
+// Built-in views that always wrap the workspace's own categories
+const TODOS = { id: 1, label: 'to-dos', description: 'Things left to-do' };
+const COMPLETED = {
+	id: 2,
+	label: 'completed',
+	description: "I've completed these, I should be proud!",
+};
 
 function createCategoriesStore() {
-	const { subscribe, set, update } = writable([]);
+	const store = createCollection();
+	const { set, upsert, remove } = store;
+
+	socket.on('category.created', upsert);
+	socket.on('category.updated', upsert);
+	socket.on('category.deleted', remove);
 
 	return {
-		subscribe,
+		subscribe: store.subscribe,
 
 		loadCategories: async () => {
 			try {
-				const { data } = await api.get('/categories');
-				set([
-					{ id: 1, label: 'to-dos', description: 'Things left to-do' },
-					...data,
-					{
-						id: 2,
-						label: 'completed',
-						description: "I've completed these, I should be proud!",
-					},
-				]);
+				socket.emit('list.categories', (res) => {
+					if (res.ok) {
+						set([TODOS, ...res.data, COMPLETED]);
+					} else {
+						set([TODOS, COMPLETED]);
+					}
+				});
 			} catch (err) {
-				set([
-					{ id: 1, label: 'to-dos', description: 'Things left to-do' },
-					{
-						id: 2,
-						label: 'completed',
-						description: "I've completed these, I should be proud!",
-					},
-				]);
+				set([TODOS, COMPLETED]);
 				throw err;
 			}
 		},
 
 		addCategory: async (category) => {
-			let existingCategory = null;
-			update((categories) => {
-				existingCategory = categories.filter((c) => c.label === category.label);
-				return categories;
+			const existing = get(store).find((c) => c.label === category.label);
+			if (existing) return existing;
+
+			socket.emit('add.category', { category }, (res) => {
+				if (res.ok) {
+					upsert(res.data);
+				} else throw new Error('Failed to add new category');
 			});
-
-			if (existingCategory.length > 0) return existingCategory;
-
-			const { data } = await api.post('/categories', category);
-
-			update((categories) => {
-				if (
-					categories.find((existingCategory) => existingCategory.id === data.id)
-				)
-					return categories;
-
-				return [...categories, data];
-			});
-
-			return data;
 		},
 
-		editCategory: async (category) => {
-			const { data } = await api.put(`/categories/${category.id}`, category);
-
-			update((categories) =>
-				categories.map((oldCategory) =>
-					oldCategory.id === category.id ? data : oldCategory,
-				),
-			);
-
-			return data;
+		updateCategory: async (category) => {
+			socket.emit('update.category', { category }, (res) => {
+				if (res.ok) {
+					upsert(res.data);
+				}
+			});
 		},
 
 		deleteCategory: async (id) => {
-			await api.delete(`/categories/${id}`);
-
-			update((categories) =>
-				categories.filter((category) => category.id !== id),
-			);
-		},
-
-		addSSECategory: (category) => {
-			update((categories) => {
-				if (
-					categories.find(
-						(existingCategory) => existingCategory.id === category.id,
-					)
-				)
-					return categories;
-
-				return [...categories, category];
+			socket.emit('delete.category', { id }, (res) => {
+				if (res.ok) {
+					remove(id);
+				} else throw new Error('Failed to delete category');
 			});
-		},
-
-		updateSSECategory(category) {
-			update((categories) =>
-				categories.map((oldCategory) =>
-					oldCategory.id === category.id ? category : oldCategory,
-				),
-			);
-		},
-
-		deleteSSECategory: (id) => {
-			update((categories) =>
-				categories.filter((category) => category.id !== id),
-			);
 		},
 	};
 }

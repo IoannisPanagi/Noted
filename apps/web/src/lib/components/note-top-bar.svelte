@@ -43,7 +43,7 @@ async function handleNewNote(event) {
 	try {
 		if (newNoteText.trim()) {
 			toast.loading('Saving note...');
-			await notes.addNote(newNoteText, currentCategory.id);
+			await notes.addNote(newNoteText, currentCategory?.id);
 			toast.success('Saved note');
 			newNoteText = '';
 		}
@@ -57,7 +57,7 @@ async function handleClearAll() {
 	isDeleting = true;
 	try {
 		toast.loading('Clearing all notes...');
-		await notes.clearAll();
+		await notes.clearNotes();
 		toast.success('Successfully cleared all notes');
 	} catch (err) {
 		toast.error(err.message);

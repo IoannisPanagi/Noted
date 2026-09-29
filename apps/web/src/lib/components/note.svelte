@@ -66,11 +66,11 @@ async function handleMarkComplete() {
 	}
 }
 
-async function handleEditNote() {
+async function handleUpdateNote() {
 	try {
 		note.text = editingNoteText;
 		toast.loading('Editing...');
-		await notes.editNote(note);
+		await notes.updateNote(note);
 		toast.success('Successfully saved note');
 	} catch (err) {
 		toast.error(err.message);
@@ -105,7 +105,7 @@ function handleKeyDown(e) {
 		!e.metaKey
 	) {
 		e.preventDefault();
-		handleEditNote();
+		handleUpdateNote();
 	}
 	if (e.key === 'Escape') {
 		e.preventDefault();
@@ -169,7 +169,7 @@ function formatDate(isoString) {
 	</CardHeader>
 	<CardContent>
 		{#if isEditing}
-			<form onsubmit={handleEditNote} class="w-full" noValidate>
+			<form onsubmit={handleUpdateNote} class="w-full" noValidate>
 				<InputGroup class="bg-white/70 dark:bg-white/70">
 					<Textarea
 						class="field-sizing-content bg-white flex min-h-20 w-full resize-none rounded-md px-3 py-2.5 text-base outline-none transition-[color,box-shadow] md:text-sm"

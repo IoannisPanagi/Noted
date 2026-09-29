@@ -1,5 +1,7 @@
-import { writable } from 'svelte/store';
+import { get } from 'svelte/store';
+import { createCollection } from '$lib/stores/collection.js';
 import { api } from '$lib/utils/api.js';
+import { socket } from '$lib/utils/socket.js';
 
 const COLORS = [
 	'bg-powder-blush',
@@ -21,10 +23,40 @@ function randomBackgroundColor() {
 }
 
 function createNotesStore() {
-	const { subscribe, set, update } = writable([]);
+	const store = createCollection();
+	const { set, upsert, remove, update } = store;
+
+	// Socket listener for note changes on the API
+	socket.on('note.created', upsert);
+	socket.on('note.updated', upsert);
+	socket.on('note.deleted', remove);
+	socket.on('notes.cleared', () => {
+		set([]);
+	});
+
+	// The server un-assigns a deleted category's notes without sending them again
+	// For when you are in the general to-dos and the category disappears, so that you don't
+	// Get errors where it goes "Category missing please fix"
+	socket.on('category.deleted', (categoryId) =>
+		update((notes) =>
+			notes.map((note) =>
+				note.categoryId === categoryId ? { ...note, categoryId: null } : note,
+			),
+		),
+	);
+
+	async function updateNote(note) {
+		socket.emit('update.note', { note }, (res) => {
+			if (res.ok) {
+				// Update the store if response is okay.
+				upsert(res.data);
+			} else throw new Error(`Failed to update note`);
+		});
+	}
 
 	return {
-		subscribe,
+		subscribe: store.subscribe,
+		updateNote,
 
 		loadNotes: async (category) => {
 			try {
@@ -37,107 +69,55 @@ function createNotesStore() {
 		},
 
 		addNote: async (text, category) => {
-			let currentLength = 0;
-			update((notes) => {
-				currentLength = notes.length;
-				return notes;
-			});
-
-			const newNote = {
-				text,
-				backgroundColor: randomBackgroundColor(),
-				isCompleted: false,
-				createdAt: new Date().toISOString(),
-				completedAt: null,
-				category: category,
-				order: currentLength,
-			};
-
-			const { data } = await api.post('/notes', newNote);
-
-			update((notes) => {
-				if (notes.find((existingNote) => existingNote.id === data.id)) {
-					return notes;
-				}
-
-				return [...notes, data];
-			});
-		},
-
-		editNote: async (note) => {
-			const { data } = await api.put(`/notes/${note.id}`, note);
-
-			update((notes) =>
-				notes.map((oldNote) => (oldNote.id === note.id ? data : oldNote)),
+			socket.emit(
+				'add.note',
+				{
+					note: {
+						text,
+						backgroundColor: randomBackgroundColor(),
+						noteOrder: get(store).length,
+						categoryId: category ?? null,
+					},
+				},
+				(res) => {
+					if (res.ok) {
+						upsert(res.data);
+					} else throw new Error('Failed to add note');
+				},
 			);
 		},
 
 		toggleNoteComplete: async (id) => {
-			let noteToUpdate = null;
-			update((notes) => {
-				noteToUpdate = notes.find((note) => note.id === id);
-				return notes;
+			const note = get(store).find((note) => note.id === id);
+			if (!note) return;
+
+			await updateNote({
+				...note,
+				isCompleted: !note.isCompleted,
+				completedAt: note.isCompleted ? null : new Date().toISOString(),
 			});
-
-			if (!noteToUpdate) {
-				return;
-			}
-
-			const updatedNote = {
-				...noteToUpdate,
-				isCompleted: !noteToUpdate.isCompleted,
-				completedAt: !noteToUpdate.isCompleted
-					? new Date().toISOString()
-					: null,
-			};
-
-			const { data } = await api.put(`/notes/${id}`, updatedNote);
-
-			update((notes) => notes.map((note) => (note.id === id ? data : note)));
 		},
 
 		deleteNote: async (id) => {
-			await api.delete(`/notes/${id}`);
-
-			update((notes) => notes.filter((note) => note.id !== id));
+			socket.emit(
+				'delete.note',
+				{
+					id,
+				},
+				(res) => {
+					if (res.ok) {
+						remove(id);
+					}
+				},
+			);
 		},
 
-		clearAll: async () => {
-			await api.delete(`/notes`);
-
-			update(() => []);
-		},
-
-		addSSENote: (note) => {
-			update((notes) => {
-				if (notes.find((existingNote) => existingNote.id === note.id)) {
-					return notes;
+		clearNotes: async () => {
+			socket.emit('clear.notes', (res) => {
+				if (res.ok) {
+					set([]);
 				}
-
-				return [...notes, note];
 			});
-		},
-
-		updateSSENote(note) {
-			update((notes) => {
-				return notes.map((existingNote) =>
-					existingNote.id === note.id ? note : existingNote,
-				);
-			});
-		},
-
-		deleteSSENote(id) {
-			update((notes) => {
-				if (!notes.find((existingNote) => existingNote.id === id)) {
-					return notes;
-				}
-
-				return notes.filter((existingNote) => existingNote.id !== id);
-			});
-		},
-
-		clearAllSSENotes() {
-			update(() => []);
 		},
 	};
 }
