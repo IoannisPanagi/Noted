@@ -2,6 +2,7 @@ import { APP_NAME, LOG_LEVEL } from '@constants';
 import { DrizzleModule } from '@drizzle/drizzle.module';
 import { Module } from '@nestjs/common';
 import { APP_INTERCEPTOR, APP_PIPE } from '@nestjs/core';
+import { EventEmitterModule } from '@nestjs/event-emitter';
 import { AuthModule } from '@noted/auth/auth.module';
 import { CategoriesModule } from '@noted/categories/categories.module';
 import { HealthModule } from '@noted/health/health.module';
@@ -32,6 +33,7 @@ import { ZodSerializerInterceptor, ZodValidationPipe } from 'nestjs-zod';
 							},
 			},
 		}),
+		EventEmitterModule.forRoot(),
 		DrizzleModule,
 		WorkspacesModule,
 		CategoriesModule,
