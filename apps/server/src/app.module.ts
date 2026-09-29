@@ -1,4 +1,4 @@
-import {APP_NAME, LOG_LEVEL} from '@constants';
+import { APP_NAME, LOG_LEVEL } from '@constants';
 import { DrizzleModule } from '@drizzle/drizzle.module';
 import { Module } from '@nestjs/common';
 import { APP_INTERCEPTOR, APP_PIPE } from '@nestjs/core';
@@ -21,12 +21,14 @@ import { ZodSerializerInterceptor, ZodValidationPipe } from 'nestjs-zod';
 				transport:
 					process.env.NODE_ENV === 'test'
 						? undefined
-						: { target: 'pino-pretty', options: {
-							colorize: true,
-							singleLine: true,
-							ignore: 'context,pid,hostname',
-							messageFormat: `\x1b[32m[${APP_NAME}]\x1b[36m [{context}]\x1b[0m {msg}`
-							}
+						: {
+								target: 'pino-pretty',
+								options: {
+									colorize: true,
+									singleLine: true,
+									ignore: 'context,pid,hostname',
+									messageFormat: `\x1b[32m[${APP_NAME}]\x1b[36m [{context}]\x1b[0m {msg}`,
+								},
 							},
 			},
 		}),

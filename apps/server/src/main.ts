@@ -3,9 +3,10 @@ import {
 	APP_NAME,
 	APP_PORT,
 	APP_VERSION,
-	CORS_ORIGINS, LOG_LEVEL,
+	CORS_ORIGINS,
+	LOG_LEVEL,
 } from '@constants';
-import { Logger as Console } from '@nestjs/common'
+import { Logger as Console } from '@nestjs/common';
 import { NestFactory } from '@nestjs/core';
 import { DocumentBuilder, SwaggerModule } from '@nestjs/swagger';
 import cookieParser from 'cookie-parser';
@@ -49,13 +50,13 @@ async function bootstrap() {
 
 	await app.listen(APP_PORT);
 
-	const logger = new Console('ApplicationRuntime')
+	const logger = new Console('ApplicationRuntime');
 
 	logger.log(
 		`${APP_NAME} - ${APP_VERSION} listening on port ${APP_PORT}` +
-		(CORS_ORIGINS.length > 0
-			? `, accepting credentialed requests from ${CORS_ORIGINS.join(', ')}`
-			: ''),
+			(CORS_ORIGINS.length > 0
+				? `, accepting credentialed requests from ${CORS_ORIGINS.join(', ')}`
+				: ''),
 	);
 
 	logger.debug(`Log level is '${LOG_LEVEL}'`);
