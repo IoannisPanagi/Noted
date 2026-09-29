@@ -1,8 +1,7 @@
 <script>
 import { LogOut, Paintbrush, PenLine } from '@lucide/svelte';
 import { toast } from 'svelte-sonner';
-import { goto, invalidateAll } from '$app/navigation';
-import { resolve } from '$app/paths';
+import { goto } from '@roxi/routify';
 import {
 	AlertDialog,
 	AlertDialogAction,
@@ -22,11 +21,15 @@ import {
 } from '$lib/components/ui/input-group/index.js';
 import { Spinner } from '$lib/components/ui/spinner/index.js';
 import { notes } from '$lib/stores/notes.js';
+import { workspace } from '$lib/stores/workspace.js';
 import { api } from '$lib/utils/api.js';
 
 let newNoteText = $state('');
 
-let { currentCategory, workspace } = $props();
+let { currentCategory } = $props();
+
+// Read during init: Svelte 5 subscribes lazily and Routify's context is gone by the time a handler runs
+const navigate = $goto;
 
 let isDialogOpen = $state(false);
 let isDeleting = $state(false);
@@ -34,7 +37,8 @@ let isDeleting = $state(false);
 let isEditingDescription = $state(false);
 let isSavingDescription = $state(false);
 
-let description = $derived(workspace.description);
+// Optional chaining: the store goes null when the workspace is destroyed
+let description = $derived($workspace?.description);
 let password = $state(null);
 
 async function handleNewNote(event) {
@@ -79,16 +83,13 @@ function handleKeyDown(e) {
 	}
 }
 
-async function handleWorkspaceSave() {
+async function handleWorkspaceSave(event) {
+	event.preventDefault();
+
 	isSavingDescription = true;
 	try {
 		toast.loading('Saving the workspace...');
-		const response = await api.post('/workspaces', {
-			description: description,
-			password: password,
-		});
-
-		workspace.description = response.data.description;
+		await workspace.updateWorkspace({ description, password });
 
 		isEditingDescription = false;
 		toast.success('Saved the workspace');
@@ -101,11 +102,9 @@ async function handleWorkspaceSave() {
 
 async function handleLeaveWorkspace() {
 	try {
-		await api.delete('/auth');
+		await api.delete('/logout');
 
-		await invalidateAll();
-
-		await goto(resolve('/'));
+		navigate('/', {}, { mode: 'replace' });
 	} catch (err) {
 		toast.error(err.message);
 	}
@@ -113,7 +112,7 @@ async function handleLeaveWorkspace() {
 </script>
 
 <div class="flex flex-col gap-2 justify-center mb-5">
-	<h2 class="font-bold text-2xl">Current workspace: {workspace.passphrase}</h2>
+	<h2 class="font-bold text-2xl">Current workspace: {$workspace?.passphrase}</h2>
 	<div class="lg:w-1/3 md:w-1/2 w-full">
 		<div class="flex flex-row gap-2">
 			{#if isEditingDescription}
@@ -131,7 +130,7 @@ async function handleLeaveWorkspace() {
 										(e) => {
 											if(e.key === 'Escape') {
 												isEditingDescription = false;
-												description = workspace.description;
+												description = $workspace?.description;
 											}
 										}
 									}
@@ -140,10 +139,10 @@ async function handleLeaveWorkspace() {
 									bind:value={description}
 									placeholder="Write a description..." />
 								<InputGroupAddon align="block-end">
-									<InputGroupButton class="ms-auto" type="cancel" size="sm" variant="destructive"
+									<InputGroupButton class="ms-auto" type="button" size="sm" variant="destructive"
 																		onclick={() => {
 									isEditingDescription = false;
-									description = workspace.description;
+									description = $workspace?.description;
 								}}>Cancel
 									</InputGroupButton>
 									<InputGroupButton type="submit" size="sm" variant="secondary">Save</InputGroupButton>
@@ -154,7 +153,7 @@ async function handleLeaveWorkspace() {
 				</div>
 			{:else}
 				<p class="max-w-fit w-fit">
-					{workspace.description ?? "No description found add a new one!"}
+					{$workspace?.description ??"No description found add a new one!"}
 				</p>
 				<button
 					class="dark:text-green-200 text-blue-600"
