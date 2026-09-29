@@ -7,12 +7,16 @@ import { NotesListener } from '@noted/realtime/listeners/notes.listener';
 import { RealtimeGateway } from '@noted/realtime/realtime.gateway';
 import { TokensModule } from '@noted/tokens/tokens.module';
 import { WorkspacesModule } from '@noted/workspaces/workspaces.module';
+import { CategoriesListener } from './listeners/categories.listener';
+import { WorkspacesListener } from './listeners/workspaces.listener';
 
 @Module({
 	imports: [NotesModule, CategoriesModule, WorkspacesModule],
 	providers: [
 		RealtimeGateway,
 		NotesListener,
+		CategoriesListener,
+		WorkspacesListener,
 	],
 	exports: [RealtimeGateway],
 	controllers: [],
