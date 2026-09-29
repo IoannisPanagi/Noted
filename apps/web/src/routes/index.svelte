@@ -23,6 +23,9 @@
 
 	let passphraseInput = $state(null);
 
+	// Read during init: Svelte 5 subscribes lazily and Routify's context is gone by the time .then runs
+	const navigate = $goto;
+
 	function handleSubmit(event) {
 		event.preventDefault();
 
@@ -39,7 +42,7 @@
 					password,
 				}),
 			)
-				.then(() => $goto('/notes'))
+				.then(() => navigate('/notes'))
 				.finally(() => {isLoading = false});
 		}
 	}
@@ -62,7 +65,6 @@
 	}
 
 	function handleInputKeydown(e) {
-		console.log(e.key)
 		if (e.key === 'Escape') {
 			e.currentTarget.blur()
 		}

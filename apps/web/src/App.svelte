@@ -4,8 +4,10 @@ import { ModeWatcher, toggleMode } from 'mode-watcher';
 import icon from '$lib/assets/icon.svg';
 import { Button } from '$lib/components/ui/button/index.js';
 import { Toaster } from '$lib/components/ui/sonner/index.js';
-import { Router } from '@roxi/routify';
+import {createRouter, Router} from '@roxi/routify';
 import routes from '../.routify/routes.default.js';
+
+export const router = createRouter({ routes });
 </script>
 
 <svelte:head>
@@ -29,4 +31,4 @@ import routes from '../.routify/routes.default.js';
 <ModeWatcher />
 <Toaster position="top-center" />
 
-<Router {routes} />
+<Router {router} />
