@@ -1,16 +1,43 @@
 @reference "../../../app.css";
 
+.note-slot {
+	@apply relative aspect-square;
+}
+
+/* Fills its slot, and expanded grows downwards out of it, floating over the
+   notes below rather than making its whole row taller */
 .note {
-	@apply flex aspect-square flex-col rounded-xl p-3 text-gray-900 shadow-sm;
+	@apply absolute inset-x-0 top-0 flex h-full flex-col rounded-xl p-3 text-gray-900 shadow-sm;
+}
+
+.note.is-expandable {
+	@apply cursor-pointer;
+}
+
+.note.is-expanded {
+	@apply z-10 h-auto min-h-full shadow-xl;
 }
 
 .note-toolbar {
 	@apply flex justify-end gap-0.5;
 }
 
-/* The details button stays on the right; the save hint, while editing, on the left */
+/* The details button stays on the right; the save hint, while editing, on the
+   left; the expand arrow in the middle */
 .note-footer {
-	@apply flex items-center justify-end pt-1;
+	@apply relative flex items-center justify-end pt-1;
+}
+
+.note-expand {
+	@apply absolute left-1/2 -translate-x-1/2 cursor-pointer rounded-md px-2 text-gray-700 hover:bg-black/5 hover:text-gray-900;
+}
+
+.note-expand svg {
+	@apply size-5 transition-transform;
+}
+
+.note.is-expanded .note-expand svg {
+	@apply rotate-180;
 }
 
 .note-footer .save-hint {
@@ -79,11 +106,9 @@
 }
 
 /* Rendered markdown, used together with `prose`. Colours follow the note's dark
-   text rather than the theme, since notes stay light in dark mode too. Long
-   notes fade out at the bottom instead of being cut mid-line */
+   text rather than the theme, since notes stay light in dark mode too */
 .note-body {
 	@apply min-h-0 flex-1 overflow-hidden px-1 wrap-break-word;
-	mask-image: linear-gradient(to bottom, black 80%, transparent);
 
 	--tw-prose-body: var(--color-gray-900);
 	--tw-prose-headings: var(--color-gray-900);
@@ -94,6 +119,24 @@
 	--tw-prose-bullets: var(--color-gray-700);
 	--tw-prose-counters: var(--color-gray-700);
 	--tw-prose-quote-borders: var(--rich-marine);
+}
+
+/* Collapsed long notes are line-clamped here (note.svelte sets the count),
+   which needs the vertical box and hides what's past the last line */
+.note-text {
+	-webkit-box-orient: vertical;
+	@apply overflow-hidden;
+}
+
+/* Prose drops the outer margins of its direct children only, which the
+   wrapper now is. Without this the first and last blocks keep theirs, and a
+   note that fits is measured as too long */
+.note-text > :first-child {
+	@apply mt-0;
+}
+
+.note-text > :last-child {
+	@apply mb-0;
 }
 
 .note-body.is-done {
