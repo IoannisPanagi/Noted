@@ -50,9 +50,7 @@ export class Notes {
 	// No filters: done and not done, every category
 	async load() {
 		try {
-			const res = await this.#socket.emitWithAck('list.notes', {});
-			if (!res.ok) throw new Error('Could not load the notes');
-			this.list = res.data;
+			this.list = await this.#socket.emitWithAck('list.notes', {});
 			this.error = null;
 		} catch (err) {
 			this.error = err;
@@ -61,9 +59,9 @@ export class Notes {
 		}
 	}
 
-	// Awaiting the acknowledgement means a refusal reaches the caller's catch
+	// A refusal is never acknowledged, so the await times out into the caller's catch
 	async add(text, categoryId) {
-		const res = await this.#socket.emitWithAck('add.note', {
+		const saved = await this.#socket.emitWithAck('add.note', {
 			note: {
 				text,
 				backgroundColor: randomBackgroundColor(),
@@ -71,14 +69,12 @@ export class Notes {
 				categoryId: categoryId ?? null,
 			},
 		});
-		if (!res.ok) throw new Error('Failed to add note');
-		this.list = upsert(this.list, res.data);
+		this.list = upsert(this.list, saved);
 	}
 
 	async update(note) {
-		const res = await this.#socket.emitWithAck('update.note', { note });
-		if (!res.ok) throw new Error('Failed to update note');
-		this.list = upsert(this.list, res.data);
+		const saved = await this.#socket.emitWithAck('update.note', { note });
+		this.list = upsert(this.list, saved);
 	}
 
 	async toggleComplete(note) {
@@ -90,14 +86,12 @@ export class Notes {
 	}
 
 	async remove(id) {
-		const res = await this.#socket.emitWithAck('delete.note', { id });
-		if (!res.ok) throw new Error('Failed to delete note');
+		await this.#socket.emitWithAck('delete.note', { id });
 		this.list = without(this.list, id);
 	}
 
 	async clear() {
-		const res = await this.#socket.emitWithAck('clear.notes');
-		if (!res.ok) throw new Error('Failed to clear notes');
+		await this.#socket.emitWithAck('clear.notes');
 		this.list = [];
 	}
 

@@ -71,8 +71,8 @@ async function toggleComplete(note) {
 	try {
 		await notes.toggleComplete(note);
 		toast.success(note.isCompleted ? 'Marked note as not done' : 'Marked note as done');
-	} catch (err) {
-		toast.error(err.message);
+	} catch {
+		// Refused: the socket provider has already toasted why
 	}
 }
 
@@ -81,16 +81,16 @@ async function moveTo(note, categoryId) {
 	try {
 		await notes.update({ ...note, categoryId: categoryId || null });
 		toast.success(`Moved note to ${toTitleCase(folder.label)}`);
-	} catch (err) {
-		toast.error(err.message);
+	} catch {
+		// Refused: the socket provider has already toasted why
 	}
 }
 
 async function recolour(note, backgroundColor) {
 	try {
 		await notes.update({ ...note, backgroundColor });
-	} catch (err) {
-		toast.error(err.message);
+	} catch {
+		// Refused: the socket provider has already toasted why
 	}
 }
 
@@ -103,8 +103,8 @@ async function handleDelete() {
 	try {
 		await notes.remove(deleteId);
 		toast.success('Deleted note');
-	} catch (err) {
-		toast.error(err.message);
+	} catch {
+		// Refused: the socket provider has already toasted why
 	} finally {
 		isDeleteOpen = false;
 	}

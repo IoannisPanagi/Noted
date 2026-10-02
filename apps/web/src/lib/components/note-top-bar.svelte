@@ -55,8 +55,8 @@ async function handleNewNote(event) {
 		await notes.add(newNoteText, categoryId);
 		newNoteText = '';
 		toast.success('Added note');
-	} catch (err) {
-		toast.error(err.message);
+	} catch {
+		// Refused: the socket provider has already toasted why
 	}
 }
 
@@ -100,8 +100,8 @@ async function handleDescriptionBlur() {
 	try {
 		await workspace.update({ description, password: null });
 		toast.success('Saved description');
-	} catch (err) {
-		toast.error(err.message);
+	} catch {
+		// Refused: the socket provider has already toasted why
 	}
 }
 
@@ -109,8 +109,8 @@ async function handleClearAll() {
 	try {
 		await notes.clear();
 		toast.success('Cleared all notes');
-	} catch (err) {
-		toast.error(err.message);
+	} catch {
+		// Refused: the socket provider has already toasted why
 	}
 }
 
@@ -119,8 +119,8 @@ async function handleLeave() {
 		await api.delete('/logout');
 		removeActiveCategory();
 		navigate('/', {}, { mode: 'replace' });
-	} catch (err) {
-		toast.error(err.message);
+	} catch {
+		// Refused: the socket provider has already toasted why
 	}
 }
 </script>

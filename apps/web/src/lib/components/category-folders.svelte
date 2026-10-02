@@ -147,8 +147,8 @@ async function handleFormSubmit(event) {
 			toast.success(`Created ${toTitleCase(formLabel.trim())}`);
 		}
 		isFormOpen = false;
-	} catch (err) {
-		toast.error(err.message);
+	} catch {
+		// Refused: the socket provider has already toasted why
 	}
 }
 
@@ -169,8 +169,8 @@ async function handleDelete() {
 	try {
 		await categories.remove(deleteTarget.id);
 		toast.success(`Deleted ${toTitleCase(deleteTarget.label)}`);
-	} catch (err) {
-		toast.error(err.message);
+	} catch {
+		// Refused: the socket provider has already toasted why
 	} finally {
 		isDeleteOpen = false;
 	}

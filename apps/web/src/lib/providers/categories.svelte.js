@@ -32,9 +32,7 @@ export class Categories {
 
 	async load() {
 		try {
-			const res = await this.#socket.emitWithAck('list.categories');
-			if (!res.ok) throw new Error('Could not load the categories');
-			this.list = res.data;
+			this.list = await this.#socket.emitWithAck('list.categories');
 			this.error = null;
 		} catch (err) {
 			this.error = err;
@@ -48,22 +46,19 @@ export class Categories {
 		setActiveCategory(id);
 	}
 
-	// Awaiting the acknowledgement means a refusal reaches the caller's catch
+	// A refusal is never acknowledged, so the await times out into the caller's catch
 	async add(category) {
-		const res = await this.#socket.emitWithAck('add.category', { category });
-		if (!res.ok) throw new Error('Failed to add new category');
-		this.list = upsert(this.list, res.data);
+		const saved = await this.#socket.emitWithAck('add.category', { category });
+		this.list = upsert(this.list, saved);
 	}
 
 	async update(category) {
-		const res = await this.#socket.emitWithAck('update.category', { category });
-		if (!res.ok) throw new Error('Failed to update category');
-		this.list = upsert(this.list, res.data);
+		const saved = await this.#socket.emitWithAck('update.category', { category });
+		this.list = upsert(this.list, saved);
 	}
 
 	async remove(id) {
-		const res = await this.#socket.emitWithAck('delete.category', { id });
-		if (!res.ok) throw new Error('Failed to delete category');
+		await this.#socket.emitWithAck('delete.category', { id });
 		this.list = without(this.list, id);
 	}
 

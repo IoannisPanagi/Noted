@@ -125,8 +125,8 @@ async function handleEditBlur() {
 	try {
 		await notes.update({ ...note, text });
 		toast.success('Saved note');
-	} catch (err) {
-		toast.error(err.message);
+	} catch {
+		// Refused: the socket provider has already toasted why
 	}
 }
 </script>

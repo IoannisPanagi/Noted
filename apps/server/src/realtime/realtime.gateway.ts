@@ -34,6 +34,11 @@ import { Server, Socket } from 'socket.io';
 	namespace: '/api/workspace',
 	cors: { origin: CORS_ORIGINS, credentials: true },
 })
+// A message's acknowledgement is only ever its answer: the data asked for, or
+// `true` for a change with nothing to send back. Anything refused is thrown as
+// a WsException, which reaches the client as an 'exception' event and leaves
+// the message unanswered. Nest never acknowledges a null or undefined return,
+// so every handler a client awaits must return something
 export class RealtimeGateway {
 	// Server exists because of the gateway initializing. It does not need a constructor
 	@WebSocketServer()
@@ -67,24 +72,18 @@ export class RealtimeGateway {
 		@MessageBody('completed') isCompleted?: boolean,
 		@MessageBody('categoryLabel') categoryLabel?: string | null,
 	) {
-		return {
-			ok: true,
-			data: categoryLabel
-				? await this.notesService.findAllByPassphraseAndCategoryLabel(
-						passphrase,
-						categoryLabel,
-						isCompleted,
-					)
-				: await this.notesService.findAllByPassphrase(passphrase, isCompleted),
-		};
+		return categoryLabel
+			? await this.notesService.findAllByPassphraseAndCategoryLabel(
+					passphrase,
+					categoryLabel,
+					isCompleted,
+				)
+			: await this.notesService.findAllByPassphrase(passphrase, isCompleted);
 	}
 
 	@SubscribeMessage('list.categories')
 	async listCategories(@Passphrase() passphrase: string) {
-		return {
-			ok: true,
-			data: await this.categoriesService.findAllByPassphrase(passphrase),
-		};
+		return await this.categoriesService.findAllByPassphrase(passphrase);
 	}
 
 	//* Note CUD events from clients *//
@@ -93,7 +92,7 @@ export class RealtimeGateway {
 		@Passphrase() passphrase: string,
 		@MessageBody('note') note: CreateNoteDto,
 	) {
-		return { ok: true, data: await this.notesService.create(note, passphrase) };
+		return await this.notesService.create(note, passphrase);
 	}
 
 	@SubscribeMessage('update.note')
@@ -101,7 +100,7 @@ export class RealtimeGateway {
 		@Passphrase() passphrase: string,
 		@MessageBody('note') note: UpdateNoteDto,
 	) {
-		return { ok: true, data: await this.notesService.update(note, passphrase) };
+		return await this.notesService.update(note, passphrase);
 	}
 
 	@SubscribeMessage('delete.note')
@@ -112,14 +111,14 @@ export class RealtimeGateway {
 		if (!id) throw new WsException('Id is required');
 
 		const deleted = await this.notesService.delete(passphrase, id);
-		if (!deleted) return { ok: false, error: 'Not Found' };
-		return { ok: true, data: deleted };
+		if (!deleted) throw new WsException('Note not found');
+		return true;
 	}
 
 	@SubscribeMessage('clear.notes')
 	async clearNotes(@Passphrase() passphrase: string) {
 		await this.notesService.deleteAllByPassphrase(passphrase);
-		return { ok: true };
+		return true;
 	}
 
 	//* Category CUD events from clients *//
@@ -128,10 +127,7 @@ export class RealtimeGateway {
 		@Passphrase() passphrase: string,
 		@MessageBody('category') category: CreateCategoryDto,
 	) {
-		return {
-			ok: true,
-			data: await this.categoriesService.create(category, passphrase),
-		};
+		return await this.categoriesService.create(category, passphrase);
 	}
 
 	@SubscribeMessage('update.category')
@@ -139,10 +135,7 @@ export class RealtimeGateway {
 		@Passphrase() passphrase: string,
 		@MessageBody('category') category: UpdateCategoryDto,
 	) {
-		return {
-			ok: true,
-			data: await this.categoriesService.update(category, passphrase),
-		};
+		return await this.categoriesService.update(category, passphrase);
 	}
 
 	@SubscribeMessage('delete.category')
@@ -153,8 +146,8 @@ export class RealtimeGateway {
 		if (!id) throw new WsException('Id is required');
 
 		const deleted = await this.categoriesService.delete(passphrase, id);
-		if (!deleted) return { ok: false, error: 'Not Found' };
-		return { ok: true, data: deleted };
+		if (!deleted) throw new WsException('Category not found');
+		return true;
 	}
 
 	//* Workspace update events from clients *//
@@ -168,10 +161,7 @@ export class RealtimeGateway {
 			passphrase,
 		);
 
-		return {
-			ok: true,
-			data: { ...updatedWorkspace, password: null },
-		};
+		return { ...updatedWorkspace, password: null };
 	}
 
 	//* Listener emitters *//

@@ -34,13 +34,11 @@ export class Workspace {
 	}
 
 	// The server replaces both fields, so an omitted password unlocks the workspace.
-	// Awaiting the acknowledgement means a refusal reaches the caller's catch
+	// A refusal is never acknowledged, so the await times out into the caller's catch
 	async update({ description, password }) {
-		const res = await this.#socket.emitWithAck('update.workspace', {
+		this.current = await this.#socket.emitWithAck('update.workspace', {
 			workspace: { description, password },
 		});
-		if (!res.ok) throw new Error('Failed to update workspace');
-		this.current = res.data;
 	}
 
 	destroy() {
