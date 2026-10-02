@@ -1,9 +1,7 @@
 import axios from 'axios';
 
-const BASE_API_URL = 'http://localhost:3000/api';
-
 const api = axios.create({
-	baseURL: BASE_API_URL,
+	baseURL: import.meta.env.VITE_API_URL,
 	headers: {
 		'Content-Type': 'application/json',
 	},
@@ -16,7 +14,8 @@ api.interceptors.response.use(
 		return response;
 	},
 	function onRejected(error) {
-		return Promise.reject(error.response.data);
+		// No response (offline, timed out) has no body, so the error itself goes on
+		return Promise.reject(error.response?.data ?? error);
 	},
 );
 
