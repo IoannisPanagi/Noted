@@ -59,15 +59,14 @@ export class RealtimeGateway {
 	}
 
 	//* Get notes and categories *//
+	// Like GET /api/notes: completed narrows to complete/incomplete notes, and
+	// omitted returns both
 	@SubscribeMessage('list.notes')
 	async listNotes(
 		@Passphrase() passphrase: string,
-		@MessageBody('completed') isCompleted: boolean,
-		@MessageBody('categoryLabel') categoryLabel: string | null,
+		@MessageBody('completed') isCompleted?: boolean,
+		@MessageBody('categoryLabel') categoryLabel?: string | null,
 	) {
-		if (isCompleted === undefined)
-			throw new WsException('Completed is missing');
-
 		return {
 			ok: true,
 			data: categoryLabel

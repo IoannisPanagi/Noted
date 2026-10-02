@@ -17,3 +17,31 @@ export function readShowCompleted() {
 		toast.error(error);
 	}
 }
+
+// The open folder: a category id, or null for "All". Forgotten on logout, since
+// it belongs to the workspace that was open
+const ACTIVE_CATEGORY_KEY = 'NOTED_ACTIVE_CATEGORY';
+
+export function setActiveCategory(id) {
+	try {
+		localStorage.setItem(ACTIVE_CATEGORY_KEY, JSON.stringify(id));
+	} catch (error) {
+		toast.error(error);
+	}
+}
+
+export function readActiveCategory() {
+	try {
+		return JSON.parse(localStorage.getItem(ACTIVE_CATEGORY_KEY));
+	} catch (error) {
+		toast.error(error);
+	}
+}
+
+export function removeActiveCategory() {
+	try {
+		localStorage.removeItem(ACTIVE_CATEGORY_KEY);
+	} catch (error) {
+		toast.error(error);
+	}
+}
