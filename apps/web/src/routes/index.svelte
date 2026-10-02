@@ -29,7 +29,7 @@
 
 	onMount(() => {
 	    api.get('/authenticated').then((res) => {
-			if(res.authenticated) navigate('/notes')
+			if (res.data.authenticated) navigate('/notes')
 		});
 	})
 
