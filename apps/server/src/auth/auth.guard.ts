@@ -41,7 +41,8 @@ export class AuthGuard implements CanActivate {
 		try {
 			const token = request.cookies[APP_AUTH_COOKIE_NAME] as string;
 
-			if (!token) return false;
+			// Thrown rather than returning false, which Nest answers with a 403
+			if (!token) throw new UnauthorizedException();
 
 			request[APP_WORKSPACE_LOCAL_NAME] =
 				await this.tokensService.validateToken(token);
