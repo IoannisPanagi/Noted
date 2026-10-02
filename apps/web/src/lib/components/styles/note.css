@@ -1,0 +1,119 @@
+@reference "../../../app.css";
+
+.note {
+	@apply flex aspect-square flex-col rounded-xl p-3 text-gray-900 shadow-sm;
+}
+
+.note-toolbar {
+	@apply flex justify-end gap-0.5;
+}
+
+/* The details button stays on the right; the save hint, while editing, on the left */
+.note-footer {
+	@apply flex items-center justify-end pt-1;
+}
+
+.note-footer .save-hint {
+	@apply me-auto;
+}
+
+/* On the pastel the hint buttons keep the note's ink and hover like the note's
+   other actions, instead of the theme's hover colours */
+.note .save-hint-action {
+	@apply text-gray-900 hover:bg-black/5;
+}
+
+/* Icon actions sit on the pastel, so all of them (toolbar and footer) keep the
+   note's dark text and get the same faint dark tint on hover, in both modes */
+.note-action {
+	@apply text-gray-900 hover:bg-black/5;
+}
+
+.note-action svg {
+	@apply size-5;
+}
+
+/* A done note's tick is a deep green: the theme's success green blended into
+   the green and blue pastels */
+.note-action-complete {
+	@apply hover:text-green-700;
+}
+
+.note-action-complete.is-done {
+	@apply text-green-700;
+}
+
+.note-action-edit {
+	@apply hover:text-primary;
+}
+
+.note-action-edit.is-active {
+	@apply text-primary;
+}
+
+.note-action-delete {
+	@apply hover:text-destructive;
+}
+
+.note-details {
+	@apply w-auto text-sm;
+}
+
+/* A dot of each pastel in the context menu's Colour list */
+.note-swatch {
+	@apply size-3.5 shrink-0 rounded-full border border-black/15;
+}
+
+/* Comic Neue has no medium weight, so Regular is thickened with a hairline
+   stroke. That keeps **bold** in markdown visibly bolder than the rest */
+.note-font {
+	font-family: "Comic Neue", cursive;
+	font-weight: 400;
+	-webkit-text-stroke: 0.35px currentColor;
+}
+
+/* The raw markdown, edited where the rendered text sits: same spot and ink, a
+   faint wash to show it's being edited, and it scrolls instead of fading */
+.note-editor {
+	@apply -mx-1 min-h-0 flex-1 overflow-y-auto rounded-md bg-white/50 px-2 py-1 leading-7 whitespace-pre-wrap wrap-break-word outline-none;
+}
+
+/* Rendered markdown, used together with `prose`. Colours follow the note's dark
+   text rather than the theme, since notes stay light in dark mode too. Long
+   notes fade out at the bottom instead of being cut mid-line */
+.note-body {
+	@apply min-h-0 flex-1 overflow-hidden px-1 wrap-break-word;
+	mask-image: linear-gradient(to bottom, black 80%, transparent);
+
+	--tw-prose-body: var(--color-gray-900);
+	--tw-prose-headings: var(--color-gray-900);
+	--tw-prose-bold: var(--color-gray-900);
+	--tw-prose-code: var(--color-gray-900);
+	--tw-prose-links: var(--color-gray-900);
+	--tw-prose-quotes: var(--color-gray-900);
+	--tw-prose-bullets: var(--color-gray-700);
+	--tw-prose-counters: var(--color-gray-700);
+	--tw-prose-quote-borders: var(--rich-marine);
+}
+
+.note-body.is-done {
+	@apply line-through;
+}
+
+/* Tighter spacing than prose's article defaults, to fit a small card */
+.note-body :where(h1, h2, h3, h4, h5, h6) {
+	@apply mt-0 mb-2;
+}
+
+.note-body :where(p, ul, ol) {
+	@apply my-1.5;
+}
+
+.note-body :where(li) {
+	@apply my-0;
+}
+
+.note-body :where(code)::before,
+.note-body :where(code)::after {
+	content: none;
+}

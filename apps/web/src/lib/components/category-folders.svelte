@@ -1,0 +1,367 @@
+<script>
+import { ChevronDown, Eraser, PenLine, Plus } from '@lucide/svelte';
+import { toast } from 'svelte-sonner';
+import {
+	AlertDialog,
+	AlertDialogAction,
+	AlertDialogCancel,
+	AlertDialogContent,
+	AlertDialogDescription,
+	AlertDialogFooter,
+	AlertDialogHeader,
+	AlertDialogTitle,
+} from '$lib/components/ui/alert-dialog/index.js';
+import { Button } from '$lib/components/ui/button/index.js';
+import {
+	ContextMenu,
+	ContextMenuContent,
+	ContextMenuItem,
+	ContextMenuSeparator,
+	ContextMenuTrigger,
+} from '$lib/components/ui/context-menu/index.js';
+import {
+	Dialog,
+	DialogContent,
+	DialogDescription,
+	DialogFooter,
+	DialogHeader,
+	DialogTitle,
+} from '$lib/components/ui/dialog/index.js';
+import {
+	Field,
+	FieldDescription,
+	FieldError,
+	FieldGroup,
+	FieldLabel,
+} from '$lib/components/ui/field/index.js';
+import { Input } from '$lib/components/ui/input/index.js';
+import { Label } from '$lib/components/ui/label/index.js';
+import {
+	Popover,
+	PopoverContent,
+	PopoverTrigger,
+} from '$lib/components/ui/popover/index.js';
+import { Separator } from '$lib/components/ui/separator/index.js';
+import { Switch } from '$lib/components/ui/switch/index.js';
+import { Textarea } from '$lib/components/ui/textarea/index.js';
+import { getCategories } from '$lib/providers/categories-provider.svelte';
+import { focusAction, isPlainEnter, toTitleCase } from '$lib/utils.js';
+import SaveHint from './save-hint.svelte';
+import './styles/folders.css';
+
+// The open folder is the categories provider's (it remembers it between visits)
+let { showCompleted = $bindable(false), children } = $props();
+
+const categories = getCategories();
+
+const ALL = { id: null, label: 'all', description: 'Every note in this workspace' };
+
+let folders = $derived([ALL, ...categories.list]);
+let active = $derived(folders.find((folder) => folder.id === categories.activeId) ?? ALL);
+
+let isMoreOpen = $state(false);
+
+// The tab list wraps tabs that don't fit onto a second line that's cut off. CSS
+// can't shrink a wrapped row to what's left on its first line, so this does: it
+// lets the list take its full width, finds the tabs still on the first line and
+// sets the width to the right edge of the last one, so "+" sits right after it.
+// Positions are measured unrounded (offsetWidth rounds to whole pixels, which
+// could make the list a fraction too narrow and push the last tab off too)
+let innerWidth = $state(0);
+let fontsLoaded = $state(false);
+let tabList;
+
+document.fonts.ready.then(() => (fontsLoaded = true));
+
+function fitTabList() {
+	tabList.style.width = '';
+
+	const listBox = tabList.getBoundingClientRect();
+	const tabBoxes = [...tabList.children]
+		.map((tab) => tab.getBoundingClientRect())
+		// Tabs hidden on smaller screens have no size; wrapped ones sit below the first line
+		.filter((box) => box.width > 0 && box.top < listBox.top + box.height / 2);
+
+	const lastRight = Math.max(...tabBoxes.map((box) => box.right));
+	tabList.style.width = `${Math.ceil(lastRight - listBox.left)}px`;
+}
+
+// Measure again whenever something can change which tabs fit: the window, the
+// font finishing loading, the categories, or the active tab (bold is wider)
+$effect(() => {
+	[innerWidth, fontsLoaded, folders, active, isMoreOpen];
+	fitTabList();
+});
+
+// One dialog for both creating and editing; editing holds the category being edited
+let isFormOpen = $state(false);
+// Raw, so they stay the store's own objects: a deep $state copy would never
+// equal the folder it came from (see labelError)
+let editing = $state.raw(null);
+let formLabel = $state('');
+let formDescription = $state('');
+let wasSubmitted = $state(false);
+let form;
+
+// Checked as you type, so problems show under the field instead of failing on
+// save. Labels are stored lowercase, so that's how they're compared. An empty
+// label only complains once saving was tried
+let labelError = $derived.by(() => {
+	const label = formLabel.trim().toLowerCase();
+	if (!label) return wasSubmitted ? 'Give the category a label' : null;
+	if (folders.some((folder) => folder !== editing && folder.label === label))
+		return `There's already a category called "${toTitleCase(label)}"`;
+	return null;
+});
+
+// The category the delete dialog is asking about: the open one from its header,
+// or any tab from its context menu
+let deleteTarget = $state.raw(null);
+let isDeleteOpen = $state(false);
+let deleteButton = $state(null);
+
+function open(folder) {
+	categories.select(folder.id);
+	isMoreOpen = false;
+}
+
+function openForm(category = null) {
+	editing = category;
+	formLabel = category?.label ?? '';
+	formDescription = category?.description ?? '';
+	wasSubmitted = false;
+	isFormOpen = true;
+}
+
+async function handleFormSubmit(event) {
+	event.preventDefault();
+	wasSubmitted = true;
+	if (!formLabel.trim() || labelError) return;
+
+	try {
+		if (editing) {
+			await categories.update({ id: editing.id, label: formLabel, description: formDescription });
+			toast.success(`Saved ${toTitleCase(formLabel.trim())}`);
+		} else {
+			await categories.add({ label: formLabel, description: formDescription });
+			toast.success(`Created ${toTitleCase(formLabel.trim())}`);
+		}
+		isFormOpen = false;
+	} catch (err) {
+		toast.error(err.message);
+	}
+}
+
+function confirmDelete(category) {
+	deleteTarget = category;
+	isDeleteOpen = true;
+}
+
+// Like the old form: Enter in the description saves too, Shift+Enter is a new line
+function handleDescriptionKeydown(e) {
+	if (!isPlainEnter(e)) return;
+	e.preventDefault();
+	e.currentTarget.form.requestSubmit();
+}
+
+// Deleting the open category drops back to "All": the page only uses ids that still exist
+async function handleDelete() {
+	try {
+		await categories.remove(deleteTarget.id);
+		toast.success(`Deleted ${toTitleCase(deleteTarget.label)}`);
+	} catch (err) {
+		toast.error(err.message);
+	} finally {
+		isDeleteOpen = false;
+	}
+}
+</script>
+
+<svelte:window bind:innerWidth />
+
+<div>
+	<div class="folder-tabs">
+		<!-- Only whole tabs that fit are shown; all of them are under More -->
+		<div class="folder-tab-list" bind:this={tabList}>
+			{#each folders as folder (folder.id)}
+				<!-- Right-click (or the menu key) on a tab opens its category menu.
+				     The tab itself is the trigger, so no wrapper lands in the list -->
+				<ContextMenu>
+					<ContextMenuTrigger>
+						{#snippet child({ props })}
+							<button
+								{...props}
+								class={['folder-tab', folder === active && !isMoreOpen && 'is-active']}
+								title={toTitleCase(folder.label)}
+								onclick={() => open(folder)}
+							>
+								<span class="folder-tab-label">{toTitleCase(folder.label)}</span>
+							</button>
+						{/snippet}
+					</ContextMenuTrigger>
+					{@render categoryMenu(folder)}
+				</ContextMenu>
+			{/each}
+		</div>
+
+		<button class="folder-tab" aria-label="New category" title="New category" onclick={() => openForm()}>
+			<Plus />
+		</button>
+
+		<!-- A dropdown cut from the folder itself: same colour, hanging off the tab -->
+		<Popover bind:open={isMoreOpen}>
+			<PopoverTrigger class={['folder-tab folder-tab-more', isMoreOpen && 'is-active']}>
+				More <ChevronDown />
+			</PopoverTrigger>
+			<PopoverContent align="start" sideOffset={0} class="folder-menu">
+				{#each folders as folder (folder.id)}
+					<ContextMenu>
+						<ContextMenuTrigger>
+							{#snippet child({ props })}
+								<Button
+									{...props}
+									size="sm"
+									variant={folder === active ? 'secondary' : 'ghost'}
+									class="folder-menu-item"
+									title={toTitleCase(folder.label)}
+									onclick={() => open(folder)}
+								>
+									<span class="folder-tab-label">{toTitleCase(folder.label)}</span>
+								</Button>
+							{/snippet}
+						</ContextMenuTrigger>
+						{@render categoryMenu(folder)}
+					</ContextMenu>
+				{/each}
+			</PopoverContent>
+		</Popover>
+	</div>
+
+	<div class="folder-body">
+		<div class="folder-header">
+			<p class="folder-description">{active.description ?? 'No description'}</p>
+
+			<div class="folder-controls">
+				<Label class="folder-toggle">
+					<Switch bind:checked={showCompleted} /> Show completed
+				</Label>
+
+				<!-- "All" isn't a real category, so it has nothing to edit or delete -->
+				{#if active !== ALL}
+					<Separator orientation="vertical" class="folder-divider" />
+					<div class="folder-category-actions">
+						<Button variant="ghost" size="icon-sm" aria-label="Edit category" onclick={() => openForm(active)}>
+							<PenLine />
+						</Button>
+						<Button
+							variant="ghost"
+							size="icon-sm"
+							class="folder-category-delete"
+							aria-label="Delete category"
+							onclick={() => confirmDelete(active)}
+						>
+							<Eraser />
+						</Button>
+					</div>
+				{/if}
+			</div>
+		</div>
+
+		{@render children()}
+	</div>
+</div>
+
+<!-- The same menu on a tab and in the More list. "All" isn't a real category,
+     so it only offers a new one -->
+{#snippet categoryMenu(folder)}
+	<ContextMenuContent>
+		<ContextMenuItem onSelect={() => openForm()}>
+			<Plus /> New category
+		</ContextMenuItem>
+		{#if folder !== ALL}
+			<ContextMenuSeparator />
+			<ContextMenuItem onSelect={() => openForm(folder)}>
+				<PenLine /> Edit category
+			</ContextMenuItem>
+			<ContextMenuItem variant="destructive" onSelect={() => confirmDelete(folder)}>
+				<Eraser /> Delete category
+			</ContextMenuItem>
+		{/if}
+	</ContextMenuContent>
+{/snippet}
+
+<Dialog bind:open={isFormOpen}>
+	<DialogContent>
+		<DialogHeader>
+			<DialogTitle>{editing ? `Edit ${toTitleCase(editing.label)}` : 'New category'}</DialogTitle>
+			<DialogDescription>Categories are the folders your notes are sorted into.</DialogDescription>
+		</DialogHeader>
+		<form class="category-form" bind:this={form} onsubmit={handleFormSubmit} novalidate>
+			<FieldGroup>
+				<Field data-invalid={labelError ? true : undefined}>
+					<FieldLabel for="category-label">Label</FieldLabel>
+					<Input
+						id="category-label"
+						placeholder="e.g. Homework"
+						bind:value={formLabel}
+						aria-invalid={labelError ? true : undefined}
+						autofocus
+					/>
+					{#if labelError}
+						<FieldError>{labelError}</FieldError>
+					{:else}
+						<FieldDescription>
+							Shown on the tab as "{toTitleCase(formLabel.trim() || 'homework')}"
+						</FieldDescription>
+					{/if}
+				</Field>
+
+				<Field>
+					<FieldLabel for="category-description">
+						Description <span class="category-form-optional">(optional)</span>
+					</FieldLabel>
+					<Textarea
+						id="category-description"
+						class="category-form-description"
+						placeholder="e.g. What's due this week"
+						bind:value={formDescription}
+						onkeydown={handleDescriptionKeydown}
+					/>
+					<FieldDescription>Shown inside the folder, above its notes. Shift+Enter for a new line</FieldDescription>
+				</Field>
+			</FieldGroup>
+
+			<DialogFooter>
+				<SaveHint
+					class="dialog-hint"
+					action={editing ? 'save' : 'create'}
+					onsave={() => form.requestSubmit()}
+					oncancel={() => (isFormOpen = false)}
+				/>
+				<Button type="button" variant="outline" onclick={() => (isFormOpen = false)}>Cancel</Button>
+				<Button type="submit" disabled={!!labelError}>{editing ? 'Save' : 'Create'}</Button>
+			</DialogFooter>
+		</form>
+	</DialogContent>
+</Dialog>
+
+<AlertDialog bind:open={isDeleteOpen}>
+	<AlertDialogContent onOpenAutoFocus={(e) => focusAction(e, deleteButton)}>
+		<AlertDialogHeader>
+			<AlertDialogTitle>Delete "{toTitleCase(deleteTarget?.label ?? '')}"?</AlertDialogTitle>
+			<AlertDialogDescription>Its notes are kept and move to "All".</AlertDialogDescription>
+		</AlertDialogHeader>
+		<AlertDialogFooter>
+			<SaveHint
+				class="dialog-hint"
+				action="delete"
+				onsave={() => deleteButton.click()}
+				oncancel={() => (isDeleteOpen = false)}
+			/>
+			<AlertDialogCancel>Cancel</AlertDialogCancel>
+			<AlertDialogAction bind:ref={deleteButton} class="btn-danger dialog-action" onclick={handleDelete}>
+				Delete
+			</AlertDialogAction>
+		</AlertDialogFooter>
+	</AlertDialogContent>
+</AlertDialog>

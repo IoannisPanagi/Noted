@@ -14,6 +14,7 @@
 	import { Spinner } from '$lib/components/ui/spinner/index.js';
 	import { api } from '$lib/utils/api';
 	import { goto } from '@roxi/routify';
+    import { onMount } from 'svelte';
 
 	let isLoading = $state(false);
 
@@ -25,6 +26,12 @@
 
 	// Read during init: Svelte 5 subscribes lazily and Routify's context is gone by the time .then runs
 	const navigate = $goto;
+
+	onMount(() => {
+	    api.get('/authenticated').then((res) => {
+			if(res.authenticated) navigate('/notes')
+		});
+	})
 
 	function handleSubmit(event) {
 		event.preventDefault();

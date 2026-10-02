@@ -1,0 +1,34 @@
+@reference "../../../app.css";
+
+/* The component styles in this folder are deliberately left outside Tailwind's
+   layers, so they win over the shadcn variant classes they're combined with
+   without needing cn() or !important */
+
+/* One red in light and dark: the Button's destructive variant fades to 60% in
+   dark mode otherwise */
+.btn-danger {
+	@apply bg-destructive text-white hover:bg-destructive/90;
+}
+
+/* "↵ Enter to save · Esc to cancel", next to anything edited in place. Only the
+   layout lives here; the keys are shadcn's Kbd */
+.save-hint {
+	@apply flex h-6 shrink-0 items-center gap-1 text-xs;
+}
+
+/* Small enough to keep the hint's 24px height */
+.save-hint-action {
+	@apply h-6 gap-1 px-1.5 text-xs font-normal;
+}
+
+/* The same hint in a dialog footer, on the left, away from the buttons */
+.dialog-hint {
+	@apply me-auto self-center;
+}
+
+/* A confirm dialog opens on its action, so Enter runs it. A ring that shows
+   whatever the focus came from (a click, a menu, a key) makes that visible
+   instead of leaving it to be guessed */
+.dialog-action:focus {
+	@apply ring-[3px] ring-destructive/40 ring-offset-2 ring-offset-background outline-none;
+}

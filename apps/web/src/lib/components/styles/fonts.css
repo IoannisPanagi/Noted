@@ -1,0 +1,43 @@
+/* Self-hosted from public/fonts: Noto Sans for the interface, Comic Neue for notes */
+
+@font-face {
+	font-family: "Noto Sans";
+	src: url("/fonts/Noto_Sans/NotoSans-VariableFont_wdth,wght.ttf")
+		format("truetype");
+	font-weight: 100 900;
+	font-style: normal;
+	font-display: swap;
+}
+@font-face {
+	font-family: "Noto Sans";
+	src: url("/fonts/Noto_Sans/NotoSans-Italic-VariableFont_wdth,wght.ttf")
+		format("truetype");
+	font-weight: 100 900;
+	font-style: italic;
+	font-display: swap;
+}
+@font-face {
+	font-family: "Comic Neue";
+	src: url("/fonts/Comic_Neue/ComicNeue-Light.ttf") format("truetype");
+	font-weight: 300;
+	font-display: swap;
+}
+@font-face {
+	font-family: "Comic Neue";
+	src: url("/fonts/Comic_Neue/ComicNeue-Regular.ttf") format("truetype");
+	font-weight: 400;
+	font-display: swap;
+}
+@font-face {
+	font-family: "Comic Neue";
+	src: url("/fonts/Comic_Neue/ComicNeue-Bold.ttf") format("truetype");
+	font-weight: 700;
+	font-display: swap;
+}
+@font-face {
+	font-family: "Comic Neue";
+	src: url("/fonts/Comic_Neue/ComicNeue-Italic.ttf") format("truetype");
+	font-weight: 400;
+	font-style: italic;
+	font-display: swap;
+}
