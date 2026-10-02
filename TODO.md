@@ -17,11 +17,10 @@ Last verified against a live server + scratch DB on 2026-09-22.
   the final `workspaces` / `categories` / `notes` tables from `database.js`
   (the v4 shape after `database_migration.js` ran), managed by drizzle-kit
   migrations.
-- **Dependency majors aligned**: `@nestjs/swagger` and `@nestjs/jwt` were
-  installed/pinned at `^11` to match `@nestjs/common` `^11`. The `^12` builds
-  of both are ESM-only and expect Nest 12: swagger crashed at boot
-  (`loadPackageSync` is not exported by Nest 11), and jwt could not be
-  `require`d by jest's CommonJS runtime.
+- **Dependency majors aligned**: every `@nestjs/*` package (including
+  `swagger`, `jwt`, `websockets` and `platform-socket.io`) is on `^12`. Mixing
+  majors broke before: the `^12` swagger crashed at boot on Nest 11
+  (`loadPackageSync` is not exported there), so keep them moving together.
 - **Configuration — one entry point**: `constants.ts` is the only thing that
   reads `process.env`. It loads `.env` itself (`process.loadEnvFile`, without
   overriding variables already set) and validates required variables.
@@ -101,6 +100,36 @@ Last verified against a live server + scratch DB on 2026-09-22.
   clears the caller's auth cookie. A locked workspace must confirm with
   `{ "password": "…" }` in the body (401 otherwise). An open one needs no body,
   and a workspace that was never persisted is a no-op 204.
+- **Workspace update**: `PUT /api/workspaces` and the `update.workspace`
+  socket event replace the description and password. The password is hashed,
+  never echoed back, and only re-hashed when it actually changes (a new salt
+  would change the fingerprint and log every session out).
+- **Realtime — Socket.IO gateway** (`apps/server/src/realtime`): replaces the
+  deprecated SSE layer, on the `/api/workspace` namespace.
+  - Every message goes through `AuthGuard` (`AuthWsGuard` for ws), which reads
+    the JWT from the handshake's auth cookie, so it inherits the password
+    fingerprint check: a socket whose cookie no longer validates can't change
+    the workspace.
+  - `join.workspace` puts the socket in a per-passphrase room. The client
+    re-joins on every reconnect.
+  - Note, category and workspace CRUD run over the socket (`add.note`,
+    `update.note`, `delete.note`, `clear.notes`, `list.notes`,
+    `list.categories`, `add/update/delete.category`, `update.workspace`). The
+    acknowledgement is the answer itself: the data asked for, or `true` for
+    a change with nothing to send back. Nest never acknowledges a `null` or
+    `undefined` return, so every awaited handler must return something.
+  - Domain events from the services are pushed to the room: `note.created`,
+    `note.updated`, `note.deleted`, `notes.cleared`, `category.created`,
+    `category.updated`, `category.deleted`, `workspace.updated` (plus
+    `auth.refresh`) and `workspace.destroyed`, after which the room's sockets
+    are disconnected.
+- **Rejected socket messages**: every refusal (a missing id, a note or
+  category that isn't found, a refused guard, a server error) is thrown as a
+  `WsException` and reaches the client as an `exception` event, never as an
+  acknowledgement. There is no `{ ok: false }` answer. The socket provider
+  toasts the event's message, and the client's `ackTimeout` (5s) rejects the
+  unanswered `emitWithAck` into the caller's `catch`, which stays quiet since
+  the reason was already shown. Its only job is to skip the success toast.
 - **Logout actually clears the cookie**: it used `res.cookie(…, { expires })`
   on top of the default `maxAge`, which Express lets win, so the "expired"
   cookie lived another 12h. Logout and workspace deletion now use
@@ -139,34 +168,16 @@ Last verified against a live server + scratch DB on 2026-09-22.
 
 ## Missing (not started)
 
-- **Workspace update / lock-down**: the "update description/password"
-  endpoint from `routes/api/workspaces/+server.js`, on the existing
-  `WorkspacesController`. The only way to add or change a password on a
-  workspace that already exists (login only sets one when it creates the
-  workspace). Hash it and never echo it back, and **only re-hash when the
-  password actually changes** — re-hashing an unchanged password mints a new
-  salt, which changes the fingerprint and logs every session out for nothing.
-- **Realtime push — Socket.IO gateway** (not to be started yet): replaces the
-  deprecated SSE layer (below). Decided:
-  - transport is Socket.IO (`@nestjs/platform-socket.io`)
-  - every connection is authenticated through the JWT, read from the same
-    auth cookie the REST API uses (not a separate token or query param)
-  - **kick on password change**: when a workspace's password changes, every
-    socket in that workspace's room is disconnected and must reconnect (and
-    so re-authenticate)
-  - **heartbeat**: a periodic ping that keeps the socket alive behind proxies
-    *and* re-validates the connection's token/workspace on each beat. A socket
-    whose cookie no longer validates is dropped, so a stale client can't keep
-    changing the workspace.
-
-  The heartbeat re-runs `validateToken`, so it inherits the password
-  fingerprint check for free. Still to do: join a per-passphrase room, and
-  emit `newNote`, `updateNote`, `deleteNote`, `clearAllNotes`, `newCategory`,
-  `updateCategory`, `deleteCategory`, `updateWorkspace`. `@nestjs/websockets` /
-  `@nestjs/websockets` / `@nestjs/platform-socket.io` are still `^12` while
-  the rest of `@nestjs/*` is `^11`; align them before building on them, as was
-  needed for `@nestjs/swagger` and `@nestjs/jwt` (see Done).
-- **Deeper test coverage**: the suite covers the simple cases. Not covered:
+- **Realtime — what's left of the plan**:
+  - **kick on password change**: a workspace update only emits `auth.refresh`;
+    clients log in again and reconnect themselves. Stale sockets are refused
+    message by message (see Done), but they stay connected and keep receiving
+    the room's events. Disconnecting the room on a password change is still to
+    do.
+  - **heartbeat**: no periodic re-validation yet. The connection itself isn't
+    authenticated either, only the messages it sends.
+- **Deeper test coverage**: the suite covers the simple cases. Nothing tests
+  the realtime gateway yet. Also not covered:
   concurrent writes, the `setWhere` guard at the repository level (only
   reachable by bypassing the controllers), cookie/JWT expiry behaviour, and
   malformed-payload edge cases.
@@ -220,3 +231,140 @@ Last verified against a live server + scratch DB on 2026-09-22.
 - **SvelteKit server half** (`hooks.server.js`, `+page.server.js`, the
   `routes/api/*` handlers): `apps/web` is a pure API client, and session
   resolution is exclusively `AuthGuard`'s job.
+
+## Frontend — providers
+
+`apps/web` moves from module-level stores to provider components in
+`src/lib/providers/`: a component that owns one thing for the subtree under
+it, from mount to destroy, and hands it down through `createContext`.
+
+### The contract
+
+Every provider provides three things, all reachable through its getter
+(`getSocket()`, `getWorkspace()`, `getCategories()`, `getNotes()`):
+
+- **The state**: what it's for (the connection, the workspace, the
+  categories, the notes), live, kept up to date by its socket listeners.
+- **The loading state**: whether that state is still arriving, so the UI can
+  show it was asked for and not yet there.
+- **The errored state**: what went wrong, if loading (or staying connected)
+  failed, so the UI can say so instead of showing an empty list.
+
+The three are part of what's provided, not only something the provider shows
+on its own while it gates its children. A consumer decides what to render for
+each. Listeners are added when the provider is created and removed when it's
+destroyed. Changes go through plain `emitWithAck` calls that throw when the
+answer isn't `ok`, so failures reach the caller's `catch` (no request helper
+wrapped around socket.io).
+
+### Where each provider stands
+
+All four are built and meet the contract. `/notes` nests them socket →
+workspace → categories → notes, and `notes-page.svelte` decides what to show:
+the first error of the four, otherwise the first still loading.
+
+- **Socket** (`socket.svelte.js`): `client` (the socket.io connection),
+  `loading` until the first connect, `error` once the server refuses it
+  (dropped connections retry on their own). Joins the workspace room on every
+  connect and handles `auth.refresh`.
+- **Workspace** (`workspace.svelte.js`): `current`, `loading`, `error`. Its one
+  REST call, `GET /api/workspaces/me`, is allowed. The provider sends 401/403
+  back to `/`.
+- **Categories** (`categories.svelte.js`): `list`, `loading`, `error`. Loads
+  with `list.categories` on every connect, so a reconnect catches up. Also
+  owns the open folder (`selectedId`, `activeId`, `select()`), remembered in
+  localStorage and forgotten on "Leave workspace".
+- **Notes** (`notes.svelte.js`): `list`, `loading`, `error`. Loads every note
+  with `list.notes` on every connect, never over REST; the page filters by
+  folder and "Show completed". A deleted category's notes fall back to "All".
+
+## Cleanup (2026-10-02)
+
+The redesign replaced the old page: `/notes` is the new notes page, and the
+old page, its components (masonry, drawer, dialogs, category form), the
+module stores, `$lib/utils/socket.js`, `/new/notes`, `/design` and the
+`new-theme` scoping are gone. The theme lives in `app.css`, fonts and shared
+styles load from `main.js`, and the components sit in `src/lib/components`
+with their CSS in `components/styles/`. The unused `accordion`, `drawer` and
+`tabs` UI components and the `svelte-bricks` / `vaul-svelte` dependencies were
+removed. The API URL comes from `VITE_API_URL` (`apps/web/.env`, see
+`.env.example`).
+
+## Ideas
+
+- **Buttonless notes**: a setting that drops the note's toolbar and footer
+  buttons (done, edit, delete, details), leaving the right-click menu and
+  keybinds as the only way to act on a note. A toggle at the top right, next
+  to the light/dark switch. Worth it beyond looks: a Firefox profile
+  (2026-10-02) put the 4 shadcn `Button`s per note at about half the cost of
+  building a note. Depends on the keybinds (Gmail-style, already decided) and
+  on a way to pick a note from the keyboard.
+
+## Passphrase gate (after the notes page is complete)
+
+- Upgrade it to the new design.
+
+## Pages to build
+
+- **404 page**: `[...fallback].svelte` catches unknown routes; give it a real
+  page in the new design.
+- **Network error page**: for when the server can't be reached. Timed-out
+  socket messages aren't toasted (only the server's `exception` events are),
+  so a dropped connection currently fails silently.
+
+## Technological Regression
+
+Where the new notes page does less than the old one (`apps/old`). Compared on
+2026-09-29.
+
+Nothing open.
+
+Closed: long notes can be read in full again (expanding notes),
+"Show completed" is remembered again (localStorage), Enter confirms
+dialogs again, actions toast a confirmation again, links and login land on
+the new page, notes load over the socket, one socket connection, and the API
+URL comes from the environment.
+
+## Technological Advancements
+
+Where the new notes page improves on the existing one.
+
+- **Categories scale**: the old tabs overflowed and broke with many
+  categories. The new folder tabs fit the space they have and the rest go
+  under a More ▾ dropdown.
+- **One "All" folder**: the old "to-dos" and "completed" pseudo-categories are
+  replaced by an "All" folder and a single "Show completed" switch.
+- **Markdown notes**: notes render markdown (headings, lists, quotes, code)
+  through `marked`, sanitised by DOMPurify since notes are shared with the
+  whole workspace. The old notes were plain text.
+- **In-place editing**: notes and the workspace description are edited where
+  they stand instead of being swapped for a text box. Only Enter saves, Esc or
+  clicking away cancel, and the "Enter to save / Esc to cancel" hints are
+  clickable.
+- **Expanding notes**: a note too long for its square shows an arrow, and
+  clicking the note (or the arrow) expands it. It floats over the notes below
+  instead of stretching its row, so one long note doesn't make a whole row
+  tall, and any number can be open at once. Collapsed, a long note ends on
+  its last whole line with an ellipsis instead of fading out.
+- **Moving notes**: a note can be moved to another category (context menu →
+  Move to). The old app had no way to change a note's category after creating
+  it.
+- **Recolouring notes**: a note's colour can be changed (context menu →
+  Colour). It used to be random and fixed forever.
+- **Keyboard-first dialogs**: confirm dialogs open on their action, which gets
+  a visible ring, so Enter confirms and Esc backs out, with "Enter to delete ·
+  Esc to cancel" hints in every dialog footer. The old dialogs ran their
+  action on any Enter, even with Cancel focused.
+- **Honest confirmations**: the "Saved note" style toasts only show once the
+  server has acknowledged the change, and failures reach the error toast.
+- **Context menus**: right-click menus on category tabs, the More list and
+  notes.
+- **Renaming categories**: labels can be edited, not only descriptions, and
+  the category dialog checks for empty or duplicate labels as you type. The
+  server's duplicate error never reached the old UI.
+- **One design system**: a single theme (Marine on slate, porcelain/graphite
+  backgrounds), fonts (Noto Sans, Comic Neue for notes), one red, one radius,
+  and shadcn components throughout, where the old app mixed reds, radii and
+  hand-made buttons.
+- **Tidier code**: the new components keep their styling in per-component CSS
+  files instead of long utility strings in the markup.
