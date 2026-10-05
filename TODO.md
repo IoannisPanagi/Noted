@@ -36,7 +36,7 @@ Last verified against a live server + scratch DB on 2026-09-22.
   - workspace doesn't exist and a password is supplied → the workspace is
     created locked with that (hashed) password, then the user is logged in
   - workspace exists and is open → a supplied password is ignored (locking an
-    existing workspace is the job of the future workspace lock-down feature)
+    existing workspace goes through the workspace update, see below)
   - otherwise → a token is issued and nothing is persisted (the workspace is
     created lazily, see below)
 
@@ -134,8 +134,6 @@ Last verified against a live server + scratch DB on 2026-09-22.
   on top of the default `maxAge`, which Express lets win, so the "expired"
   cookie lived another 12h. Logout and workspace deletion now use
   `res.clearCookie`.
-
-
 - **Health check**: `GET /api/health` is public, runs `SELECT 1` through
   `HealthRepository`, and returns `{ status, name, version }` or a 503 when
   the database is unreachable. The `Hello World!` scaffold
@@ -166,7 +164,7 @@ Last verified against a live server + scratch DB on 2026-09-22.
   cookie now reports `{ authenticated: false }` instead of falling through to
   an empty 200 for exceptions other than `UnauthorizedException`.
 
-## Missing (not started)
+## Missing
 
 - **Realtime — what's left of the plan**:
   - **kick on password change**: a workspace update only emits `auth.refresh`;
@@ -187,7 +185,7 @@ Last verified against a live server + scratch DB on 2026-09-22.
 - **Logout doesn't revoke.** Logging out clears the cookie in that browser
   only; a token copied beforehand keeps working until `JWT_EXPIRY`. Same for
   a stolen cookie — changing the workspace password is the only kill switch
-  (it invalidates every older token, see the fingerprint below). Per-device
+  (it invalidates every older token, see the fingerprint above). Per-device
   logout would need server-side sessions or a revocation table; not planned.
 
 ## Planned
@@ -253,9 +251,9 @@ Every provider provides three things, all reachable through its getter
 The three are part of what's provided, not only something the provider shows
 on its own while it gates its children. A consumer decides what to render for
 each. Listeners are added when the provider is created and removed when it's
-destroyed. Changes go through plain `emitWithAck` calls that throw when the
-answer isn't `ok`, so failures reach the caller's `catch` (no request helper
-wrapped around socket.io).
+destroyed. Changes go through plain `emitWithAck` calls whose answer is the result
+itself; a refusal is never answered, so the `ackTimeout` rejects it into the
+caller's `catch` (no request helper wrapped around socket.io).
 
 ### Where each provider stands
 
@@ -311,19 +309,6 @@ removed. The API URL comes from `VITE_API_URL` (`apps/web/.env`, see
 - **Network error page**: for when the server can't be reached. Timed-out
   socket messages aren't toasted (only the server's `exception` events are),
   so a dropped connection currently fails silently.
-
-## Technological Regression
-
-Where the new notes page does less than the old one (`apps/old`). Compared on
-2026-09-29.
-
-Nothing open.
-
-Closed: long notes can be read in full again (expanding notes),
-"Show completed" is remembered again (localStorage), Enter confirms
-dialogs again, actions toast a confirmation again, links and login land on
-the new page, notes load over the socket, one socket connection, and the API
-URL comes from the environment.
 
 ## Technological Advancements
 
