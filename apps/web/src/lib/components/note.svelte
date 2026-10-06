@@ -192,6 +192,7 @@ async function handleEditBlur() {
 			></div>
 		{:else}
 			<div class={['note-font note-body prose', note.isCompleted && 'is-done']} {@attach fitText}>
+				<!-- Safe: renderMarkdown sanitises with DOMPurify -->
 				<div class="note-text">{@html html}</div>
 			</div>
 		{/if}

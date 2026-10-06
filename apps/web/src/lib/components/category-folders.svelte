@@ -68,11 +68,14 @@ let isMoreOpen = $state(false);
 // could make the list a fraction too narrow and push the last tab off too)
 let innerWidth = $state(0);
 let fontsLoaded = $state(false);
-let tabList;
 
 document.fonts.ready.then(() => (fontsLoaded = true));
 
-function fitTabList() {
+// Attached to the list, so it measures again whenever something it reads can
+// change which tabs fit: the window, the font finishing loading, the
+// categories, or the active tab (bold is wider)
+function fitTabList(tabList) {
+	[innerWidth, fontsLoaded, folders, active, isMoreOpen];
 	tabList.style.width = '';
 
 	const listBox = tabList.getBoundingClientRect();
@@ -84,13 +87,6 @@ function fitTabList() {
 	const lastRight = Math.max(...tabBoxes.map((box) => box.right));
 	tabList.style.width = `${Math.ceil(lastRight - listBox.left)}px`;
 }
-
-// Measure again whenever something can change which tabs fit: the window, the
-// font finishing loading, the categories, or the active tab (bold is wider)
-$effect(() => {
-	[innerWidth, fontsLoaded, folders, active, isMoreOpen];
-	fitTabList();
-});
 
 // One dialog for both creating and editing; editing holds the category being edited
 let isFormOpen = $state(false);
@@ -181,7 +177,7 @@ async function handleDelete() {
 <div>
 	<div class="folder-tabs">
 		<!-- Only whole tabs that fit are shown; all of them are under More -->
-		<div class="folder-tab-list" bind:this={tabList}>
+		<div class="folder-tab-list" {@attach fitTabList}>
 			{#each folders as folder (folder.id)}
 				<!-- Right-click (or the menu key) on a tab opens its category menu.
 				     The tab itself is the trigger, so no wrapper lands in the list -->

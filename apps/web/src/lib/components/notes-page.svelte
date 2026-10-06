@@ -31,12 +31,11 @@ $effect(() => setShowCompleted(showCompleted));
 
 // Every note is on the page all the time; the folder and the toggle only hide
 // the ones that don't match. Building a note is the expensive part, so
-// switching folders or flipping the toggle never builds any
-let isShown = $derived(
-	(note) =>
-		(categories.activeId === null || note.categoryId === categories.activeId) &&
-		(showCompleted || !note.isCompleted),
-);
+// switching folders or flipping the toggle never builds any. A plain function:
+// whoever calls it tracks the state it reads
+const isShown = (note) =>
+	(categories.activeId === null || note.categoryId === categories.activeId) &&
+	(showCompleted || !note.isCompleted);
 let shownCount = $derived(notes.list.filter(isShown).length);
 </script>
 
