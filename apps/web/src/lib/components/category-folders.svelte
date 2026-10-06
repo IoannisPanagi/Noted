@@ -47,7 +47,6 @@ import { Textarea } from '$lib/components/ui/textarea/index.js';
 import { getCategories } from '$lib/providers/categories-provider.svelte';
 import { focusAction, isPlainEnter, toTitleCase } from '$lib/utils.js';
 import SaveHint from './save-hint.svelte';
-import './styles/folders.css';
 
 // The open folder is the categories provider's (it remembers it between visits)
 let { showCompleted = $bindable(false), children } = $props();
@@ -365,3 +364,113 @@ async function handleDelete() {
 		</AlertDialogFooter>
 	</AlertDialogContent>
 </AlertDialog>
+
+<style>
+@reference "../../app.css";
+
+/* One merged strip on the folder's top left. The active tab is the folder's
+   colour with bold text, so it reads as the front folder */
+.folder-tabs {
+	@apply flex w-fit overflow-hidden rounded-t-lg bg-(--folder-tab);
+}
+
+/* Global under the scoped strip, since the More tab is a PopoverTrigger and
+   the icons are Lucide components */
+.folder-tabs :global(.folder-tab) {
+	@apply flex h-9 shrink-0 cursor-pointer items-center bg-(--folder-tab) px-4 text-sm whitespace-nowrap text-muted-foreground transition-colors hover:text-foreground;
+}
+
+.folder-tabs :global(.folder-tab.is-active) {
+	@apply bg-(--folder) font-semibold text-foreground;
+}
+
+.folder-tabs :global(.folder-tab svg) {
+	@apply size-4;
+}
+
+.folder-tab-label {
+	@apply max-w-40 truncate;
+}
+
+/* Tabs that don't fit wrap onto a second line that's cut off. On large screens
+   the list may take about half the page; the script then shrinks it to the tabs
+   actually showing. Relative so the tabs' offsets are measured from the list.
+   Smaller screens show a fixed 4, then 3 */
+.folder-tab-list {
+	@apply relative flex h-9 min-w-0 flex-wrap overflow-hidden lg:max-w-[calc(50vw-2rem)];
+}
+
+.folder-tab-list > .folder-tab:nth-child(n + 5) {
+	@apply max-lg:hidden;
+}
+
+.folder-tab-list > .folder-tab:nth-child(n + 4) {
+	@apply max-md:hidden;
+}
+
+.folder-tabs :global(.folder-tab-more) {
+	@apply gap-1;
+}
+
+.folder-tabs :global(.folder-tab-more.is-active svg) {
+	@apply rotate-180;
+}
+
+/* The More dropdown: every category, the current one highlighted. It's cut from
+   the folder itself (same colour, no border) and hangs straight off the tab, so
+   its top-left corner stays square where it meets it. Portaled out of the
+   component, so it can't be scoped */
+:global(.folder-menu) {
+	@apply flex max-h-80 w-56 flex-col gap-0.5 overflow-y-auto rounded-md rounded-tl-none border-none bg-(--folder) p-1 shadow-md;
+}
+
+:global(.folder-menu .folder-menu-item) {
+	@apply justify-start;
+}
+
+.folder-body {
+	@apply flex flex-col gap-4 rounded-tr-lg rounded-b-lg bg-(--folder) p-4 shadow-sm;
+}
+
+/* Fixed height so the notes do not jump when the category buttons appear */
+.folder-header {
+	@apply flex min-h-8 items-center justify-between gap-4;
+}
+
+.folder-description {
+	@apply min-w-0 truncate text-sm text-muted-foreground;
+}
+
+.folder-controls {
+	@apply flex shrink-0 items-center gap-3;
+}
+
+.folder-controls :global(.folder-toggle) {
+	@apply flex items-center gap-2 text-sm text-muted-foreground;
+}
+
+.folder-controls :global(.folder-divider) {
+	@apply bg-(--rich-marine) data-[orientation=vertical]:h-5;
+}
+
+.folder-category-actions {
+	@apply flex items-center gap-1;
+}
+
+.folder-category-actions :global(.folder-category-delete) {
+	@apply hover:text-destructive;
+}
+
+/* The new / edit category dialog. The fields themselves are shadcn's Field */
+.category-form {
+	@apply flex flex-col gap-6;
+}
+
+.category-form-optional {
+	@apply font-normal text-muted-foreground;
+}
+
+.category-form :global(.category-form-description) {
+	@apply min-h-20 resize-none;
+}
+</style>

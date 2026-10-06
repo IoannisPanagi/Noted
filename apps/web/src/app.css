@@ -130,3 +130,69 @@
 button {
 	cursor: pointer !important;
 }
+
+/* Self-hosted from public/fonts: Noto Sans for the interface, Comic Neue for notes */
+
+@font-face {
+	font-family: "Noto Sans";
+	src: url("/fonts/Noto_Sans/NotoSans-VariableFont_wdth,wght.ttf")
+		format("truetype");
+	font-weight: 100 900;
+	font-style: normal;
+	font-display: swap;
+}
+@font-face {
+	font-family: "Noto Sans";
+	src: url("/fonts/Noto_Sans/NotoSans-Italic-VariableFont_wdth,wght.ttf")
+		format("truetype");
+	font-weight: 100 900;
+	font-style: italic;
+	font-display: swap;
+}
+@font-face {
+	font-family: "Comic Neue";
+	src: url("/fonts/Comic_Neue/ComicNeue-Light.ttf") format("truetype");
+	font-weight: 300;
+	font-display: swap;
+}
+@font-face {
+	font-family: "Comic Neue";
+	src: url("/fonts/Comic_Neue/ComicNeue-Regular.ttf") format("truetype");
+	font-weight: 400;
+	font-display: swap;
+}
+@font-face {
+	font-family: "Comic Neue";
+	src: url("/fonts/Comic_Neue/ComicNeue-Bold.ttf") format("truetype");
+	font-weight: 700;
+	font-display: swap;
+}
+@font-face {
+	font-family: "Comic Neue";
+	src: url("/fonts/Comic_Neue/ComicNeue-Italic.ttf") format("truetype");
+	font-weight: 400;
+	font-style: italic;
+	font-display: swap;
+}
+
+/* Used across components, so they live here. Left outside Tailwind's layers,
+   like the components' own styles, so they win over the shadcn variant classes
+   they're combined with without needing cn() or !important */
+
+/* One red in light and dark: the Button's destructive variant fades to 60% in
+   dark mode otherwise */
+.btn-danger {
+	@apply bg-destructive text-white hover:bg-destructive/90;
+}
+
+/* The save hint in a dialog footer, on the left, away from the buttons */
+.dialog-hint {
+	@apply me-auto self-center;
+}
+
+/* A confirm dialog opens on its action, so Enter runs it. A ring that shows
+   whatever the focus came from (a click, a menu, a key) makes that visible
+   instead of leaving it to be guessed */
+.dialog-action:focus {
+	@apply ring-[3px] ring-destructive/40 ring-offset-2 ring-offset-background outline-none;
+}

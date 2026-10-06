@@ -250,3 +250,21 @@ function formatDate(isoString) {
 		</AlertDialogFooter>
 	</AlertDialogContent>
 </AlertDialog>
+
+<style>
+@reference "../../app.css";
+
+.notes-grid {
+	@apply grid grid-cols-[repeat(auto-fill,minmax(250px,1fr))] gap-4;
+}
+
+/* A dot of each pastel in the context menu's Colour list */
+.note-swatch {
+	@apply size-3.5 shrink-0 rounded-full border border-black/15;
+}
+
+/* The popover is portaled out of the component, so it can't be scoped */
+:global(.note-details) {
+	@apply w-auto text-sm;
+}
+</style>

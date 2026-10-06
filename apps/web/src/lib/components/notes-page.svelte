@@ -8,7 +8,6 @@ import { getNotes } from '$lib/providers/notes-provider.svelte';
 import { getSocket } from '$lib/providers/socket-provider.svelte';
 import { getWorkspace } from '$lib/providers/workspace-provider.svelte';
 import { readShowCompleted, setShowCompleted } from '$lib/utils/localStorage.js';
-import './styles/notes-page.css';
 
 const socket = getSocket();
 const workspace = getWorkspace();
@@ -57,3 +56,19 @@ let shownCount = $derived(notes.list.filter(isShown).length);
 		</CategoryFolders>
 	</div>
 {/if}
+
+<style>
+@reference "../../app.css";
+
+.notes-page {
+	@apply p-8 pt-6;
+}
+
+.notes-empty {
+	@apply py-8 text-center text-sm text-muted-foreground;
+}
+
+.notes-error {
+	@apply p-5 text-destructive;
+}
+</style>

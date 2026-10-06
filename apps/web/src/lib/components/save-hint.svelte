@@ -21,3 +21,19 @@ const keepFocus = (e) => e.preventDefault();
 		<Kbd>Esc</Kbd> to cancel
 	</Button>
 </KbdGroup>
+
+<!-- Everything here is a shadcn component, so the classes are global -->
+<style>
+@reference "../../app.css";
+
+/* "↵ Enter to save · Esc to cancel". Only the layout lives here; the keys are
+   shadcn's Kbd */
+:global(.save-hint) {
+	@apply flex h-6 shrink-0 items-center gap-1 text-xs;
+}
+
+/* Small enough to keep the hint's 24px height */
+:global(.save-hint-action) {
+	@apply h-6 gap-1 px-1.5 text-xs font-normal;
+}
+</style>

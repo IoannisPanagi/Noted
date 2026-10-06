@@ -25,7 +25,6 @@ import { focusAction, focusAtEnd, isPlainEnter } from '$lib/utils.js';
 import { api } from '$lib/utils/api.js';
 import { removeActiveCategory } from '$lib/utils/localStorage.js';
 import SaveHint from './save-hint.svelte';
-import './styles/top-bar.css';
 
 // The category new notes go into; null is "All"
 let { categoryId = null } = $props();
@@ -154,7 +153,7 @@ async function handleLeave() {
 				<PenLine />
 			</Button>
 
-			<!-- Only visible while editing (see top-bar.css) -->
+			<!-- Only visible while editing (see the styles below) -->
 			<SaveHint class="top-bar-description-hint" onsave={saveDescriptionEdit} oncancel={cancelDescriptionEdit} />
 		</div>
 	</div>
@@ -204,3 +203,78 @@ async function handleLeave() {
 		</div>
 	</div>
 </div>
+
+<style>
+@reference "../../app.css";
+
+.top-bar {
+	@apply mb-10 flex flex-col gap-4;
+}
+
+.top-bar-heading {
+	@apply flex min-w-0 flex-col gap-1;
+}
+
+.top-bar-title {
+	@apply truncate text-2xl font-bold;
+}
+
+/* The description is edited where it stands: plain text that wraps onto more
+   lines as it grows, with a faint background only while focused. The pencil
+   and the key hint share one 24px slot on the first line, so swapping them
+   moves nothing */
+.top-bar-description {
+	@apply flex items-start gap-2 text-muted-foreground;
+}
+
+.top-bar-description-text {
+	@apply -mx-1 max-w-2xl min-w-12 cursor-text rounded-md px-1 leading-6 whitespace-pre-wrap outline-none focus:bg-(--folder) focus:text-foreground;
+}
+
+.top-bar-description-text:empty::before {
+	@apply text-muted-foreground/70;
+	content: attr(data-placeholder);
+}
+
+/* The pencil and the hint are components, hence global under the scoped
+   description */
+.top-bar-description :global(.top-bar-description-edit) {
+	@apply size-6;
+}
+
+/* While editing, the pencil makes way for the key hint */
+.top-bar-description :global(.top-bar-description-hint) {
+	@apply hidden;
+}
+
+.top-bar-description:focus-within :global(.top-bar-description-hint) {
+	@apply flex;
+}
+
+.top-bar-description:focus-within :global(.top-bar-description-edit) {
+	@apply hidden;
+}
+
+/* The note box on the left, workspace actions on the right with their bottom
+   edge lined up with the box's */
+.top-bar-compose {
+	@apply flex items-end justify-between gap-4;
+}
+
+.top-bar-compose-form {
+	@apply w-full lg:w-1/2;
+}
+
+.top-bar-compose-form :global(.top-bar-textarea) {
+	@apply min-h-16;
+}
+
+.top-bar-compose-form :global(.top-bar-submit) {
+	@apply ms-auto px-6;
+}
+
+/* Kept apart from Submit so Clear all is never a misclick away */
+.top-bar-actions {
+	@apply flex shrink-0 gap-2;
+}
+</style>
