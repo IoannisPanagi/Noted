@@ -1,12 +1,11 @@
 # SvelteKit → NestJS backend migration
 
-Tracks porting the old SvelteKit server code to the new NestJS app in
-`apps/server`.
+Tracks porting the original SvelteKit app to the new NestJS app in
+`apps/server`. The original app has since been removed, so SvelteKit file
+names below are historical.
 
-- `apps/old` — the original SvelteKit app, kept **only as a reference** for
-  the conversion. Nothing new gets built there.
-- `apps/web` — will be a clean Svelte (not SvelteKit) copy of just the
-  frontend, talking to `apps/server` purely over its API.
+- `apps/web` — a clean Svelte (not SvelteKit) frontend, talking to
+  `apps/server` over its API.
 - `apps/server` — the NestJS backend.
 
 Last verified against a live server + scratch DB on 2026-09-22.
