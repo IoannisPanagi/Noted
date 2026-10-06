@@ -18,8 +18,7 @@ export function readShowCompleted() {
 	}
 }
 
-// The open folder: a category id, or null for "All". Forgotten on logout, since
-// it belongs to the workspace that was open
+// Forgotten on logout, since it belongs to the workspace that was open
 const ACTIVE_CATEGORY_KEY = 'NOTED_ACTIVE_CATEGORY';
 
 export function setActiveCategory(id) {

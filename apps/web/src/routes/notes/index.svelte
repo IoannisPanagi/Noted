@@ -6,7 +6,6 @@ import SocketProvider from '$lib/providers/socket-provider.svelte';
 import WorkspaceProvider from '$lib/providers/workspace-provider.svelte';
 </script>
 
-<!-- Everything the page works on lives as long as the page does -->
 <SocketProvider>
 	<WorkspaceProvider>
 		<CategoriesProvider>

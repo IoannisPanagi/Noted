@@ -1,5 +1,5 @@
 <script module>
-// One ResizeObserver for every note body, rather than one per note
+// One ResizeObserver shared by every note, instead of one each
 const overflowChecks = new WeakMap();
 let bodyObserver;
 
@@ -25,30 +25,21 @@ import { focusAtEnd, isPlainEnter } from '$lib/utils.js';
 import { renderMarkdown } from '$lib/utils/markdown.js';
 import SaveHint from './save-hint.svelte';
 
-// Only the card itself lives here. The right-click menu, the delete dialog and
-// the details popover are shared by the whole grid (note-grid.svelte), which
-// these callbacks open, so a note costs little to create
+// The menu, delete dialog and details popover live in note-grid.svelte, keeping each note cheap
 let { note, hidden = false, editing = $bindable(false), ontoggle, ondelete, ondetails } = $props();
 
 const notes = getNotes();
 
-// Starts from the saved markdown each time editing starts, and typing overrides
-// it until then
 let editingText = $derived(editing ? note.text : '');
 let editor = $state(null);
 let isSavingEdit = false;
 
 let html = $derived(renderMarkdown(note.text));
 
-// A note whose text doesn't fit its square can be expanded. It floats over the
-// notes below instead of stretching its row, and any number can be open
 let expanded = $state(false);
 let overflows = $state(false);
 
-// Collapsed, a long note is cut at the last line that fits, which ends in an
-// ellipsis. The card's height varies with the grid, so the number of lines is
-// searched for. Redone whenever the text changes, the card resizes or the note
-// fonts finish loading. Expanded, the arrow stays to fold it back
+// Clamps a long note at the last line that fits. Card heights vary, so the line count is searched for
 function fitText(body) {
 	html;
 	const text = body.firstElementChild;
@@ -77,8 +68,6 @@ function fitText(body) {
 	return observeBody(body, fit);
 }
 
-// Clicking anywhere on the card toggles it, except on its buttons and links,
-// while editing, or when the click ends a text selection
 function handleCardClick(e) {
 	if (!overflows || editing) return;
 	if (e.target.closest('button, a')) return;
@@ -86,17 +75,12 @@ function handleCardClick(e) {
 	expanded = !expanded;
 }
 
-// The pencil (or the grid's "Edit") is the only way in, and the pencil again
-// works like Esc. It doesn't take focus when pressed (onmousedown), so pressing
-// it mid-edit doesn't blur the editor before its click
 function toggleEditing() {
 	if (editing) return cancelEdit();
 	editing = true;
 }
 
-// Like the workspace description: only Enter (or its hint button) saves, Esc or
-// clicking away throw the edit away. Every exit goes through the blur, which is
-// where that's decided
+// Only Enter saves; every exit goes through the blur, which decides whether to save
 function saveEdit() {
 	isSavingEdit = true;
 	editor.blur();
@@ -125,14 +109,12 @@ async function handleEditBlur() {
 		await notes.update({ ...note, text });
 		toast.success('Saved note');
 	} catch {
-		// Refused: the socket provider has already toasted why
+		// The socket provider already toasted the error
 	}
 }
 </script>
 
-<!-- data-note-id tells the grid's shared right-click menu which note it's on.
-     Filtered-out notes stay built and are only hidden. The slot keeps the
-     note's square in the grid, so an expanded card can grow out of it -->
+<!-- data-note-id lets the grid's shared context menu find the note -->
 <div class="note-slot" data-note-id={note.id} {hidden}>
 	<!-- The arrow button is the keyboard's way to expand -->
 	<!-- svelte-ignore a11y_click_events_have_key_events, a11y_no_static_element_interactions -->
@@ -176,7 +158,6 @@ async function handleEditBlur() {
 		</div>
 
 		{#if editing}
-			<!-- The raw markdown, edited in the spot the rendered text was in -->
 			<div
 				class="note-font note-editor"
 				contenteditable="plaintext-only"
@@ -198,7 +179,6 @@ async function handleEditBlur() {
 		{/if}
 
 		<div class="note-footer">
-			<!-- While editing, the save hint takes the footer on its own -->
 			{#if editing}
 				<SaveHint onsave={saveEdit} oncancel={cancelEdit} />
 			{:else}
@@ -237,8 +217,7 @@ async function handleEditBlur() {
 	@apply relative aspect-square;
 }
 
-/* Fills its slot, and expanded grows downwards out of it, floating over the
-   notes below rather than making its whole row taller */
+/* Absolute, so an expanded note floats over the row below instead of stretching it */
 .note {
 	@apply absolute inset-x-0 top-0 flex h-full flex-col rounded-xl p-3 text-gray-900 shadow-sm;
 }
@@ -255,8 +234,6 @@ async function handleEditBlur() {
 	@apply flex justify-end gap-0.5;
 }
 
-/* The details button stays on the right; the save hint, while editing, on the
-   left; the expand arrow in the middle */
 .note-footer {
 	@apply relative flex items-center justify-end pt-1;
 }
@@ -277,15 +254,11 @@ async function handleEditBlur() {
 	@apply me-auto;
 }
 
-/* On the pastel the hint buttons keep the note's ink and hover like the note's
-   other actions, instead of the theme's hover colours */
+/* Notes stay pastel in dark mode, so their actions keep the note's ink */
 .note :global(.save-hint-action) {
 	@apply text-gray-900 hover:bg-black/5;
 }
 
-/* Icon actions sit on the pastel, so all of them (toolbar and footer) keep the
-   note's dark text and get the same faint dark tint on hover, in both modes.
-   They're shadcn Buttons, hence global under the scoped note */
 .note :global(.note-action) {
 	@apply text-gray-900 hover:bg-black/5;
 }
@@ -294,8 +267,6 @@ async function handleEditBlur() {
 	@apply size-5;
 }
 
-/* A done note's tick is a deep green: the theme's success green blended into
-   the green and blue pastels */
 .note :global(.note-action-complete) {
 	@apply hover:text-green-700;
 }
@@ -316,22 +287,18 @@ async function handleEditBlur() {
 	@apply hover:text-destructive;
 }
 
-/* Comic Neue has no medium weight, so Regular is thickened with a hairline
-   stroke. That keeps **bold** in markdown visibly bolder than the rest */
+/* Comic Neue has no medium weight; a hairline stroke keeps **bold** visibly bolder */
 .note-font {
 	font-family: "Comic Neue", cursive;
 	font-weight: 400;
 	-webkit-text-stroke: 0.35px currentColor;
 }
 
-/* The raw markdown, edited where the rendered text sits: same spot and ink, a
-   faint wash to show it's being edited, and it scrolls instead of fading */
 .note-editor {
 	@apply -mx-1 min-h-0 flex-1 overflow-y-auto rounded-md bg-white/50 px-2 py-1 leading-7 whitespace-pre-wrap wrap-break-word outline-none;
 }
 
-/* Rendered markdown, used together with `prose`. Colours follow the note's dark
-   text rather than the theme, since notes stay light in dark mode too */
+/* Notes stay light in dark mode, so prose follows the note's ink */
 .note-body {
 	@apply min-h-0 flex-1 overflow-hidden px-1 wrap-break-word;
 
@@ -346,17 +313,13 @@ async function handleEditBlur() {
 	--tw-prose-quote-borders: var(--rich-marine);
 }
 
-/* Collapsed long notes are line-clamped here (fitText sets the count), which
-   needs the vertical box and hides what's past the last line */
+/* fitText's line clamp needs the vertical box */
 .note-text {
 	-webkit-box-orient: vertical;
 	@apply overflow-hidden;
 }
 
-/* Prose drops the outer margins of its direct children only, which the
-   wrapper now is. Without this the first and last blocks keep theirs, and a
-   note that fits is measured as too long. The markdown comes from {@html}, so
-   its elements are global */
+/* Prose only trims its direct children, without this a fitting note measures as too long */
 .note-text > :global(:first-child) {
 	@apply mt-0;
 }

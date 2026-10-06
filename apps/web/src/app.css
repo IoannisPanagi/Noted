@@ -27,10 +27,7 @@
 	--border: var(--color-fog);
 	--input: var(--color-cloud);
 	--ring: var(--color-deep-marine);
-	/* Thin accents only: spinners, accent borders, separators */
 	--rich-marine: var(--color-blue-500);
-	/* Folder body and active tab, then the tabs behind it: warm beige so the
-	   folder reads as paper next to the porcelain page */
 	--folder: var(--color-folder-yellow);
 	--folder-tab: var(--color-manila);
 }
@@ -54,8 +51,6 @@
 	--border: rgb(255 255 255 / 8%);
 	--input: rgb(255 255 255 / 12%);
 	--ring: var(--color-marine);
-	/* Close to smoky black, a shade under the graphite page so the folder sits
-	   in it rather than floating on top in blue-grey */
 	--folder: var(--color-smoke);
 	--folder-tab: var(--color-soot);
 }
@@ -97,7 +92,6 @@
 	--color-porcelain: #f3f3f5ff;
 	--color-graphite: #252525ff;
 
-	/* The theme's own colours. Tailwind's are referenced directly instead */
 	/* Light */
 	--color-frost: #fafbfc;
 	--color-deep-marine: #1d5b8f;
@@ -175,24 +169,18 @@ button {
 	font-display: swap;
 }
 
-/* Used across components, so they live here. Left outside Tailwind's layers,
-   like the components' own styles, so they win over the shadcn variant classes
-   they're combined with without needing cn() or !important */
+/* Outside Tailwind's layers, so these win over shadcn variant classes without cn() or !important */
 
-/* One red in light and dark: the Button's destructive variant fades to 60% in
-   dark mode otherwise */
+/* The destructive variant fades to 60% in dark mode otherwise */
 .btn-danger {
 	@apply bg-destructive text-white hover:bg-destructive/90;
 }
 
-/* The save hint in a dialog footer, on the left, away from the buttons */
 .dialog-hint {
 	@apply me-auto self-center;
 }
 
-/* A confirm dialog opens on its action, so Enter runs it. A ring that shows
-   whatever the focus came from (a click, a menu, a key) makes that visible
-   instead of leaving it to be guessed */
+/* Confirm dialogs open focused on their action, so show it whatever the focus came from */
 .dialog-action:focus {
 	@apply ring-[3px] ring-destructive/40 ring-offset-2 ring-offset-background outline-none;
 }

@@ -19,8 +19,7 @@ export class AuthService {
 			req.passphrase,
 		);
 
-		// Supplying a password for a workspace that doesn't exist yet creates it
-		// locked down with that password
+		// A password for a nonexistent workspace creates it locked
 		if (!workspace && req.password) {
 			const savedWorkspace = await this.workspacesService.save({
 				passphrase: req.passphrase,
@@ -38,9 +37,7 @@ export class AuthService {
 			};
 		}
 
-		// Without a password, logging in never creates a workspace - it's persisted
-		// once a note or category enters it. Until then, and while it has no
-		// password, it's open.
+		// Without a password nothing is created; it's persisted once a note or category enters it
 		if (!workspace || workspace.password === null) {
 			this.logger.debug(`Logged in to open workspace ${req.passphrase}`);
 

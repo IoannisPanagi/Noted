@@ -1,9 +1,7 @@
 import { randomUUID } from 'node:crypto';
 import { join } from 'node:path';
 
-// constants.ts validates its environment at import time, so this has to run
-// before any module is loaded. Each spec file gets its own database file inside
-// the run's temporary directory (created in jest-global-setup).
+// Runs before any import, as constants.ts validates the environment on load
 process.env.DB_FILE_NAME = join(
 	process.env.NOTED_E2E_DIRECTORY ?? '',
 	`${randomUUID()}.db`,

@@ -48,7 +48,6 @@ import { getCategories } from '$lib/providers/categories-provider.svelte';
 import { focusAction, isPlainEnter, toTitleCase } from '$lib/utils.js';
 import SaveHint from './save-hint.svelte';
 
-// The open folder is the categories provider's (it remembers it between visits)
 let { showCompleted = $bindable(false), children } = $props();
 
 const categories = getCategories();
@@ -60,20 +59,14 @@ let active = $derived(folders.find((folder) => folder.id === categories.activeId
 
 let isMoreOpen = $state(false);
 
-// The tab list wraps tabs that don't fit onto a second line that's cut off. CSS
-// can't shrink a wrapped row to what's left on its first line, so this does: it
-// lets the list take its full width, finds the tabs still on the first line and
-// sets the width to the right edge of the last one, so "+" sits right after it.
-// Positions are measured unrounded (offsetWidth rounds to whole pixels, which
-// could make the list a fraction too narrow and push the last tab off too)
+// CSS can't shrink a wrapped row to its first line, so the list is sized to the last tab that fits.
+// Unrounded positions, since offsetWidth rounding could push the last tab off
 let innerWidth = $state(0);
 let fontsLoaded = $state(false);
 
 document.fonts.ready.then(() => (fontsLoaded = true));
 
-// Attached to the list, so it measures again whenever something it reads can
-// change which tabs fit: the window, the font finishing loading, the
-// categories, or the active tab (bold is wider)
+// Reads everything that changes which tabs fit (bold active tab is wider)
 function fitTabList(tabList) {
 	[innerWidth, fontsLoaded, folders, active, isMoreOpen];
 	tabList.style.width = '';
@@ -88,19 +81,15 @@ function fitTabList(tabList) {
 	tabList.style.width = `${Math.ceil(lastRight - listBox.left)}px`;
 }
 
-// One dialog for both creating and editing; editing holds the category being edited
 let isFormOpen = $state(false);
-// Raw, so they stay the store's own objects: a deep $state copy would never
-// equal the folder it came from (see labelError)
+// Raw, as a deep $state copy would never equal its folder (see labelError)
 let editing = $state.raw(null);
 let formLabel = $state('');
 let formDescription = $state('');
 let wasSubmitted = $state(false);
 let form;
 
-// Checked as you type, so problems show under the field instead of failing on
-// save. Labels are stored lowercase, so that's how they're compared. An empty
-// label only complains once saving was tried
+// Labels are stored lowercase. An empty label only complains once saving was tried
 let labelError = $derived.by(() => {
 	const label = formLabel.trim().toLowerCase();
 	if (!label) return wasSubmitted ? 'Give the category a label' : null;
@@ -109,8 +98,6 @@ let labelError = $derived.by(() => {
 	return null;
 });
 
-// The category the delete dialog is asking about: the open one from its header,
-// or any tab from its context menu
 let deleteTarget = $state.raw(null);
 let isDeleteOpen = $state(false);
 let deleteButton = $state(null);
@@ -143,7 +130,7 @@ async function handleFormSubmit(event) {
 		}
 		isFormOpen = false;
 	} catch {
-		// Refused: the socket provider has already toasted why
+		// The socket provider already toasted the error
 	}
 }
 
@@ -152,20 +139,18 @@ function confirmDelete(category) {
 	isDeleteOpen = true;
 }
 
-// Like the old form: Enter in the description saves too, Shift+Enter is a new line
 function handleDescriptionKeydown(e) {
 	if (!isPlainEnter(e)) return;
 	e.preventDefault();
 	e.currentTarget.form.requestSubmit();
 }
 
-// Deleting the open category drops back to "All": the page only uses ids that still exist
 async function handleDelete() {
 	try {
 		await categories.remove(deleteTarget.id);
 		toast.success(`Deleted ${toTitleCase(deleteTarget.label)}`);
 	} catch {
-		// Refused: the socket provider has already toasted why
+		// The socket provider already toasted the error
 	} finally {
 		isDeleteOpen = false;
 	}
@@ -176,11 +161,9 @@ async function handleDelete() {
 
 <div>
 	<div class="folder-tabs">
-		<!-- Only whole tabs that fit are shown; all of them are under More -->
 		<div class="folder-tab-list" {@attach fitTabList}>
 			{#each folders as folder (folder.id)}
-				<!-- Right-click (or the menu key) on a tab opens its category menu.
-				     The tab itself is the trigger, so no wrapper lands in the list -->
+				<!-- The tab is the trigger itself, so no wrapper lands in the list -->
 				<ContextMenu>
 					<ContextMenuTrigger>
 						{#snippet child({ props })}
@@ -203,7 +186,6 @@ async function handleDelete() {
 			<Plus />
 		</button>
 
-		<!-- A dropdown cut from the folder itself: same colour, hanging off the tab -->
 		<Popover bind:open={isMoreOpen}>
 			<PopoverTrigger class={['folder-tab folder-tab-more', isMoreOpen && 'is-active']}>
 				More <ChevronDown />
@@ -241,7 +223,6 @@ async function handleDelete() {
 					<Switch bind:checked={showCompleted} /> Show completed
 				</Label>
 
-				<!-- "All" isn't a real category, so it has nothing to edit or delete -->
 				{#if active !== ALL}
 					<Separator orientation="vertical" class="folder-divider" />
 					<div class="folder-category-actions">
@@ -266,8 +247,6 @@ async function handleDelete() {
 	</div>
 </div>
 
-<!-- The same menu on a tab and in the More list. "All" isn't a real category,
-     so it only offers a new one -->
 {#snippet categoryMenu(folder)}
 	<ContextMenuContent>
 		<ContextMenuItem onSelect={() => openForm()}>
@@ -364,14 +343,10 @@ async function handleDelete() {
 <style>
 @reference "../../app.css";
 
-/* One merged strip on the folder's top left. The active tab is the folder's
-   colour with bold text, so it reads as the front folder */
 .folder-tabs {
 	@apply flex w-fit overflow-hidden rounded-t-lg bg-(--folder-tab);
 }
 
-/* Global under the scoped strip, since the More tab is a PopoverTrigger and
-   the icons are Lucide components */
 .folder-tabs :global(.folder-tab) {
 	@apply flex h-9 shrink-0 cursor-pointer items-center bg-(--folder-tab) px-4 text-sm whitespace-nowrap text-muted-foreground transition-colors hover:text-foreground;
 }
@@ -388,10 +363,7 @@ async function handleDelete() {
 	@apply max-w-40 truncate;
 }
 
-/* Tabs that don't fit wrap onto a second line that's cut off. On large screens
-   the list may take about half the page; the script then shrinks it to the tabs
-   actually showing. Relative so the tabs' offsets are measured from the list.
-   Smaller screens show a fixed 4, then 3 */
+/* Overflowing tabs wrap onto a hidden second line; small screens show a fixed 4, then 3 */
 .folder-tab-list {
 	@apply relative flex h-9 min-w-0 flex-wrap overflow-hidden lg:max-w-[calc(50vw-2rem)];
 }
@@ -412,10 +384,7 @@ async function handleDelete() {
 	@apply rotate-180;
 }
 
-/* The More dropdown: every category, the current one highlighted. It's cut from
-   the folder itself (same colour, no border) and hangs straight off the tab, so
-   its top-left corner stays square where it meets it. Portaled out of the
-   component, so it can't be scoped */
+/* Cut from the folder: same colour, square corner where it meets the tab */
 :global(.folder-menu) {
 	@apply flex max-h-80 w-56 flex-col gap-0.5 overflow-y-auto rounded-md rounded-tl-none border-none bg-(--folder) p-1 shadow-md;
 }
@@ -428,7 +397,7 @@ async function handleDelete() {
 	@apply flex flex-col gap-4 rounded-tr-lg rounded-b-lg bg-(--folder) p-4 shadow-sm;
 }
 
-/* Fixed height so the notes do not jump when the category buttons appear */
+/* Fixed height so the notes don't jump when the category buttons appear */
 .folder-header {
 	@apply flex min-h-8 items-center justify-between gap-4;
 }
@@ -457,7 +426,6 @@ async function handleDelete() {
 	@apply hover:text-destructive;
 }
 
-/* The new / edit category dialog. The fields themselves are shadcn's Field */
 .category-form {
 	@apply flex flex-col gap-6;
 }

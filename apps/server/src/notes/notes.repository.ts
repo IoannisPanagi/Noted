@@ -60,8 +60,7 @@ export class NotesRepository {
 		return rows.map(toDomain);
 	}
 
-	// An existing note is only updated when it belongs to note.passphrase's
-	// workspace; otherwise nothing is written and nothing is returned
+	// Only updates a note in note.passphrase's workspace
 	async save(note: Note): Promise<Note[]> {
 		const rows = await this.db
 			.insert(notes)
@@ -83,7 +82,6 @@ export class NotesRepository {
 		return rows.map(toDomain);
 	}
 
-	// Returns whether a note was actually deleted
 	async delete(passphrase: string, id: string): Promise<boolean> {
 		const result = await this.db
 			.delete(notes)

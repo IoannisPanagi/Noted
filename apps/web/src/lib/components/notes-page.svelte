@@ -14,8 +14,7 @@ const workspace = getWorkspace();
 const categories = getCategories();
 const notes = getNotes();
 
-// The page needs all four. Whatever failed first is shown; otherwise whatever is
-// still on its way, in the order they arrive in
+// Shows the first failure, otherwise whatever is still loading
 let error = $derived(socket.error ?? workspace.error ?? categories.error ?? notes.error);
 let loading = $derived(
 	(socket.loading && 'Connecting...') ||
@@ -26,13 +25,9 @@ let loading = $derived(
 
 let showCompleted = $state(readShowCompleted() ?? false);
 
-// Remember the toggle between visits
 $effect(() => setShowCompleted(showCompleted));
 
-// Every note is on the page all the time; the folder and the toggle only hide
-// the ones that don't match. Building a note is the expensive part, so
-// switching folders or flipping the toggle never builds any. A plain function:
-// whoever calls it tracks the state it reads
+// Notes are hidden rather than removed, since building one is the expensive part
 const isShown = (note) =>
 	(categories.activeId === null || note.categoryId === categories.activeId) &&
 	(showCompleted || !note.isCompleted);

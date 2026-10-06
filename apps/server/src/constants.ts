@@ -2,8 +2,7 @@ import { createHmac } from 'node:crypto';
 import { existsSync } from 'node:fs';
 import { CookieOptions } from 'express';
 
-// Single entry point for configuration: load .env (without overriding
-// variables already set in the environment) before anything reads process.env
+// Loads .env without overriding variables already set, before anything reads process.env
 if (existsSync('.env')) process.loadEnvFile('.env');
 
 if (!process.env.DB_FILE_NAME)
@@ -29,24 +28,18 @@ export const JWT_CONSTANTS = {
 	EXPIRY_SECONDS: Math.floor(+process.env.JWT_EXPIRY / 1000),
 };
 
-// Optional: the port to listen on, and the browser origins allowed to call the
-// API with credentials (comma separated). CORS stays off when none are given,
-// which is what a same-origin or reverse-proxied deployment wants.
+// CORS stays off without origins, which suits same-origin or proxied deployments
 export const APP_PORT = Number(process.env.PORT ?? 3000);
 export const CORS_ORIGINS =
 	process.env.CORS_ORIGINS?.split(',')
 		.map((origin) => origin.trim())
 		.filter((origin) => origin.length > 0) ?? [];
 
-// Optional: pino's level (silent, fatal, error, warn, info, debug, trace);
-// pino itself rejects anything else at startup
 export const LOG_LEVEL = process.env.LOG_LEVEL ?? 'info';
 
 if (!process.env.PWF_SECRET)
 	throw new Error('PWF_SECRET environment variable required');
-// Key for the password fingerprint carried by every token: HMAC(key, workspace
-// lock state). It gets its own secret, kept apart from the JWT signing key, and
-// the version label allows invalidating every fingerprint without rotating it.
+// Kept apart from the JWT key; bumping the version invalidates every fingerprint
 export const PASSWORD_FINGERPRINT_KEY = createHmac(
 	'sha256',
 	process.env.PWF_SECRET,

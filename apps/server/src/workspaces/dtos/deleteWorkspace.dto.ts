@@ -1,8 +1,7 @@
 import { createZodDto } from 'nestjs-zod';
 import { z } from 'zod';
 
-// Only a locked workspace needs its password to confirm deletion, so the
-// body may be omitted entirely
+// Only locked workspaces need a password, so the body is optional
 export const DeleteWorkspaceSchema = z
 	.object({
 		password: z

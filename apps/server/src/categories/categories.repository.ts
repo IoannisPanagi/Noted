@@ -28,8 +28,7 @@ export class CategoriesRepository {
 		return this.db.query.categories.findMany({ where: { passphrase } });
 	}
 
-	// An existing category is only updated when it belongs to
-	// category.passphrase's workspace; otherwise nothing is written or returned
+	// Only updates a category in category.passphrase's workspace
 	async save(category: Category): Promise<Category[]> {
 		return this.db
 			.insert(categories)
@@ -45,7 +44,6 @@ export class CategoriesRepository {
 			.returning();
 	}
 
-	// Returns whether a category was actually deleted
 	async delete(passphrase: string, id: string): Promise<boolean> {
 		return this.db.transaction((tx) => {
 			tx.update(notes)

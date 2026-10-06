@@ -11,14 +11,12 @@ export function toTitleCase(str) {
 		.replace(/(?:^|\s)\w/g, (match) => match.toUpperCase());
 }
 
-// Focuses an editable element with the caret after its last character
 export function focusAtEnd(element) {
 	element.focus();
 	getSelection().selectAllChildren(element);
 	getSelection().collapseToEnd();
 }
 
-// Enter on its own submits; Shift+Enter (and other modifiers) still add a new line
 export function isPlainEnter(event) {
 	return (
 		event.key === 'Enter' &&
@@ -29,8 +27,7 @@ export function isPlainEnter(event) {
 	);
 }
 
-// For a confirm dialog's onOpenAutoFocus: start on its action instead of Cancel,
-// so Enter confirms and Esc (the dialog's own) backs out
+// Confirm dialogs open on their action, so Enter confirms and Esc backs out
 export function focusAction(event, button) {
 	event.preventDefault();
 	button?.focus();

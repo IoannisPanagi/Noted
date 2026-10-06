@@ -17,7 +17,6 @@ export class TokensService {
 		private readonly workspacesService: WorkspacesService,
 	) {}
 
-	// The password hash is the workspace's stored hash, or null while it's open
 	async generateToken(
 		passphrase: string,
 		password: string | null,
@@ -46,15 +45,14 @@ export class TokensService {
 			payload.passphrase,
 		);
 
-		// Not persisted yet (nothing has entered it), so it's an open workspace
+		// Not persisted yet, so it's open
 		const currentWorkspace: Workspace = workspace ?? {
 			passphrase: payload.passphrase,
 			description: null,
 			password: null,
 		};
 
-		// The workspace's lock state must be the one the token was issued against:
-		// a changed, added or removed password invalidates every older token
+		// A changed, added or removed password invalidates every older token
 		if (
 			!this.fingerprintMatches(
 				payload.passwordFingerprint,
@@ -69,9 +67,7 @@ export class TokensService {
 		return currentWorkspace;
 	}
 
-	// An open workspace fingerprints an empty password, so every token has one.
-	// The hash itself never leaves the server - HMAC makes the tag opaque to
-	// anyone without the key, so it can't be tested against candidate hashes.
+	// Open workspaces fingerprint an empty password. HMAC keeps the hash untestable without the key
 	private passwordFingerprint(passphrase: string, password: string | null) {
 		return createHmac('sha256', PASSWORD_FINGERPRINT_KEY)
 			.update(`${passphrase}:${password ?? ''}`)

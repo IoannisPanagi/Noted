@@ -1,7 +1,6 @@
 <script module>
 import { createContext } from 'svelte';
 
-// Anything under a WorkspaceProvider reaches the workspace with getWorkspace()
 export const [getWorkspace, setWorkspace] = createContext();
 </script>
 
@@ -19,8 +18,7 @@ const navigate = $goto;
 const workspace = setWorkspace(new Workspace(getSocket().client));
 onDestroy(() => workspace.destroy());
 
-// Without a session for it, it's back to the start. Showing the loading and
-// errors is up to whoever renders under here
+// No session for this workspace sends the user back to the start
 workspace.load().then(() => {
 	if ([401, 403].includes(workspace.error?.statusCode)) navigate('/');
 });

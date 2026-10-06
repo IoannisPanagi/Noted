@@ -24,7 +24,7 @@
 
 	let passphraseInput = $state(null);
 
-	// Read during init: Svelte 5 subscribes lazily and Routify's context is gone by the time .then runs
+	// Read during init: Routify's context is gone by the time .then runs
 	const navigate = $goto;
 
 	onMount(() => {
@@ -58,14 +58,12 @@
 		const el = document.activeElement;
 		if (el instanceof HTMLInputElement || el instanceof HTMLTextAreaElement || el?.isContentEditable) return;
 
-		// Modifier keys skip
 		const altGr = e.getModifierState('AltGraph');
 		if ((e.ctrlKey || e.metaKey || e.altKey) && !altGr) return;
 
-		// Anything longer than one character (basically all special keys like 'Escape' and 'Enter') get skipped
 		if (e.key.length !== 1) return;
 
-		// Languages like Japanese need to build up their words so this stop the interference
+		// IME input (e.g. Japanese) builds words over several keys
 		if (e.isComposing) return;
 
 		 passphraseInput.focus();

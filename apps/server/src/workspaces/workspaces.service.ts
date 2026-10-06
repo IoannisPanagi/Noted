@@ -40,8 +40,7 @@ export class WorkspacesService {
 		return savedWorkspace;
 	}
 
-	// Re-hashing an unchanged password mints a new salt, which changes the
-	// fingerprint and logs every session out, so a matching password keeps its hash
+	// Re-hashing mints a new salt, changing the fingerprint and logging everyone out
 	private async hashPassword({
 		passphrase,
 		password,
@@ -64,8 +63,7 @@ export class WorkspacesService {
 		this.logger.verbose(`Workspace ${passphrase} exists`);
 	}
 
-	// Deletes the workspace with everything in it. A locked workspace must have
-	// its password confirmed; a workspace that was never persisted is a no-op.
+	// A locked workspace needs its password; a never-persisted one is a no-op
 	async delete(passphrase: string, password: string | null): Promise<void> {
 		const workspace =
 			await this.workspaceRepository.findByPassphrase(passphrase);

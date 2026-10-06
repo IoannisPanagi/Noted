@@ -34,17 +34,12 @@ import { Server, Socket } from 'socket.io';
 	namespace: '/api/workspace',
 	cors: { origin: CORS_ORIGINS, credentials: true },
 })
-// A message's acknowledgement is only ever its answer: the data asked for, or
-// `true` for a change with nothing to send back. Anything refused is thrown as
-// a WsException, which reaches the client as an 'exception' event and leaves
-// the message unanswered. Nest never acknowledges a null or undefined return,
-// so every handler a client awaits must return something
+// Acks carry only the answer (data, or `true`); refusals throw a WsException, sent as an 'exception' event.
+// Nest never acks null or undefined, so every handler a client awaits must return something
 export class RealtimeGateway {
-	// Server exists because of the gateway initializing. It does not need a constructor
 	@WebSocketServer()
 	private server!: Server;
 
-	// Service resolution handled by the DI of NestJS
 	@Inject()
 	private notesService!: NotesService;
 
@@ -64,8 +59,7 @@ export class RealtimeGateway {
 	}
 
 	//* Get notes and categories *//
-	// Like GET /api/notes: completed narrows to complete/incomplete notes, and
-	// omitted returns both
+	// Like GET /api/notes: omitting completed returns both
 	@SubscribeMessage('list.notes')
 	async listNotes(
 		@Passphrase() passphrase: string,

@@ -1,9 +1,6 @@
 import { api } from '$lib/utils/api.js';
 
-// The workspace the auth cookie points at. It lives as long as the
-// WorkspaceProvider that made it, which takes its listeners off the socket
 export class Workspace {
-	// null before it loads and after it's destroyed. Raw: it's only ever replaced
 	current = $state.raw(null);
 	loading = $state(true);
 	error = $state.raw(null);
@@ -19,8 +16,7 @@ export class Workspace {
 		for (const [event, handler] of Object.entries(this.#listeners)) socket.on(event, handler);
 	}
 
-	// The one load allowed over REST. A failure lands in error rather than
-	// being thrown, for whoever shows it
+	// The one load allowed over REST
 	async load() {
 		try {
 			const { data } = await api.get('/workspaces/me');
@@ -33,8 +29,7 @@ export class Workspace {
 		}
 	}
 
-	// The server replaces both fields, so an omitted password unlocks the workspace.
-	// A refusal is never acknowledged, so the await times out into the caller's catch
+	// The server replaces both fields, so an omitted password unlocks the workspace
 	async update({ description, password }) {
 		this.current = await this.#socket.emitWithAck('update.workspace', {
 			workspace: { description, password },

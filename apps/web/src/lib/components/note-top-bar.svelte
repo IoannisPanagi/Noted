@@ -26,7 +26,7 @@ import { api } from '$lib/utils/api.js';
 import { removeActiveCategory } from '$lib/utils/localStorage.js';
 import SaveHint from './save-hint.svelte';
 
-// The category new notes go into; null is "All"
+// null is "All"
 let { categoryId = null } = $props();
 
 // Read during init: Routify's context is gone by the time a handler runs
@@ -37,8 +37,6 @@ const notes = getNotes();
 
 let newNoteText = $state('');
 
-// Edited in place: follows the saved description, and typing overrides it until
-// it's saved or thrown away
 let description = $derived(workspace.current?.description ?? '');
 let descriptionField;
 let isSavingDescription = false;
@@ -55,7 +53,7 @@ async function handleNewNote(event) {
 		newNoteText = '';
 		toast.success('Added note');
 	} catch {
-		// Refused: the socket provider has already toasted why
+		// The socket provider already toasted the error
 	}
 }
 
@@ -66,9 +64,7 @@ function handleNewNoteKeydown(e) {
 	if (e.key === 'Escape') e.currentTarget.blur();
 }
 
-// Only Enter (or its hint button) saves. Esc or clicking away leave the field
-// too, but put the saved text back. Every exit goes through the blur, which is
-// where that's decided
+// Only Enter saves; every exit goes through the blur, which decides whether to save
 function saveDescriptionEdit() {
 	isSavingDescription = true;
 	descriptionField.blur();
@@ -100,7 +96,7 @@ async function handleDescriptionBlur() {
 		await workspace.update({ description, password: null });
 		toast.success('Saved description');
 	} catch {
-		// Refused: the socket provider has already toasted why
+		// The socket provider already toasted the error
 	}
 }
 
@@ -109,7 +105,7 @@ async function handleClearAll() {
 		await notes.clear();
 		toast.success('Cleared all notes');
 	} catch {
-		// Refused: the socket provider has already toasted why
+		// The socket provider already toasted the error
 	}
 }
 
@@ -119,7 +115,7 @@ async function handleLeave() {
 		removeActiveCategory();
 		navigate('/', {}, { mode: 'replace' });
 	} catch {
-		// Refused: the socket provider has already toasted why
+		// The socket provider already toasted the error
 	}
 }
 </script>
@@ -129,8 +125,7 @@ async function handleLeave() {
 		<h2 class="top-bar-title">{workspace.current?.passphrase}</h2>
 
 		<div class="top-bar-description">
-			<!-- Editable text rather than a textarea: it wraps and grows with its
-			     content in every browser, and looks the same editing or not -->
+			<!-- Unlike a textarea, it wraps and grows with its content in every browser -->
 			<p
 				class="top-bar-description-text"
 				contenteditable="plaintext-only"
@@ -153,7 +148,6 @@ async function handleLeave() {
 				<PenLine />
 			</Button>
 
-			<!-- Only visible while editing (see the styles below) -->
 			<SaveHint class="top-bar-description-hint" onsave={saveDescriptionEdit} oncancel={cancelDescriptionEdit} />
 		</div>
 	</div>
@@ -219,10 +213,6 @@ async function handleLeave() {
 	@apply truncate text-2xl font-bold;
 }
 
-/* The description is edited where it stands: plain text that wraps onto more
-   lines as it grows, with a faint background only while focused. The pencil
-   and the key hint share one 24px slot on the first line, so swapping them
-   moves nothing */
 .top-bar-description {
 	@apply flex items-start gap-2 text-muted-foreground;
 }
@@ -236,8 +226,6 @@ async function handleLeave() {
 	content: attr(data-placeholder);
 }
 
-/* The pencil and the hint are components, hence global under the scoped
-   description */
 .top-bar-description :global(.top-bar-description-edit) {
 	@apply size-6;
 }
@@ -255,8 +243,6 @@ async function handleLeave() {
 	@apply hidden;
 }
 
-/* The note box on the left, workspace actions on the right with their bottom
-   edge lined up with the box's */
 .top-bar-compose {
 	@apply flex items-end justify-between gap-4;
 }

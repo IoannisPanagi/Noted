@@ -49,8 +49,7 @@ export class AuthController {
 
 			return { authenticated: true };
 		} catch {
-			// Any reason the token doesn't validate is reported the same way -
-			// this endpoint answers one question and always answers it
+			// Every validation failure is reported the same way
 			return { authenticated: false };
 		}
 	}

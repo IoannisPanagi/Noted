@@ -5,8 +5,7 @@ import { AppModule } from '@noted/app.module';
 import cookieParser from 'cookie-parser';
 import request from 'supertest';
 
-// Mirrors the parts of main.ts that affect routing, so specs exercise the
-// same paths and cookie handling a real client sees
+// Mirrors main.ts's routing and cookie setup
 export async function createTestApp(): Promise<INestApplication> {
 	const moduleRef = await Test.createTestingModule({
 		imports: [AppModule],

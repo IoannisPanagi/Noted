@@ -31,19 +31,14 @@ import { focusAction, toTitleCase } from '$lib/utils.js';
 import Note from './note.svelte';
 import SaveHint from './save-hint.svelte';
 
-// Every note is rendered; isShown(note) says which ones the page wants seen,
-// and the rest are hidden rather than removed
 let { isShown } = $props();
 
 const categories = getCategories();
 const notes = getNotes();
 
-// One note is edited at a time: starting another ends the first
 let editingId = $state(null);
 
-// The menu, the delete dialog and the details popover exist once for the whole
-// grid, and each remembers which note it's showing. Ids, so they always show
-// the note as it is now
+// Shared by the whole grid. Ids, so they always show the note's current state
 let menuId = $state(null);
 let menuNote = $derived(notes.list.find((note) => note.id === menuId));
 
@@ -56,12 +51,10 @@ let detailsNote = $derived(notes.list.find((note) => note.id === detailsId));
 let detailsAnchor = $state(null);
 let isDetailsOpen = $state(false);
 
-// For "Move to". Radio values are strings, so "All" (no category) is the empty string
+// Radio values are strings, so "All" (no category) is the empty string
 let folders = $derived([{ id: '', label: 'all' }, ...categories.list]);
 
-// Right-clicking a note opens the menu for it. Anywhere else, or on a note
-// being edited, the trigger is disabled before the menu reads it, so the
-// browser's own menu shows instead (for copy and paste in the editor)
+// No note (or the one being edited) disables the menu, leaving the browser's own for copy and paste
 function pickMenuNote(e) {
 	const id = e.target.closest('[data-note-id]')?.dataset.noteId ?? null;
 	menuId = id === editingId ? null : id;
@@ -72,7 +65,7 @@ async function toggleComplete(note) {
 		await notes.toggleComplete(note);
 		toast.success(note.isCompleted ? 'Marked note as not done' : 'Marked note as done');
 	} catch {
-		// Refused: the socket provider has already toasted why
+		// The socket provider already toasted the error
 	}
 }
 
@@ -82,7 +75,7 @@ async function moveTo(note, categoryId) {
 		await notes.update({ ...note, categoryId: categoryId || null });
 		toast.success(`Moved note to ${toTitleCase(folder.label)}`);
 	} catch {
-		// Refused: the socket provider has already toasted why
+		// The socket provider already toasted the error
 	}
 }
 
@@ -90,7 +83,7 @@ async function recolour(note, backgroundColor) {
 	try {
 		await notes.update({ ...note, backgroundColor });
 	} catch {
-		// Refused: the socket provider has already toasted why
+		// The socket provider already toasted the error
 	}
 }
 
@@ -104,13 +97,12 @@ async function handleDelete() {
 		await notes.remove(deleteId);
 		toast.success('Deleted note');
 	} catch {
-		// Refused: the socket provider has already toasted why
+		// The socket provider already toasted the error
 	} finally {
 		isDeleteOpen = false;
 	}
 }
 
-// The info button again closes it
 function toggleDetails(note, anchor) {
 	if (isDetailsOpen && detailsId === note.id) {
 		isDetailsOpen = false;
@@ -155,8 +147,7 @@ function formatDate(isoString) {
 		{/snippet}
 	</ContextMenuTrigger>
 
-	<!-- Focus isn't handed back to the grid on close, or it would pull focus out
-	     of the editor that "Edit" just opened -->
+	<!-- Returning focus would pull it out of the editor "Edit" just opened -->
 	<ContextMenuContent onCloseAutoFocus={(e) => e.preventDefault()}>
 		{#if menuNote}
 			<ContextMenuItem onSelect={() => toggleComplete(menuNote)}>
@@ -211,8 +202,7 @@ function formatDate(isoString) {
 	</ContextMenuContent>
 </ContextMenu>
 
-<!-- Hangs off whichever note's info button opened it. Pressing that button
-     again shouldn't count as clicking outside, or it would close and reopen -->
+<!-- Clicking the anchoring info button again must not count as outside, or it would close and reopen -->
 <Popover bind:open={isDetailsOpen}>
 	<PopoverContent
 		class="note-details"
@@ -258,12 +248,11 @@ function formatDate(isoString) {
 	@apply grid grid-cols-[repeat(auto-fill,minmax(250px,1fr))] gap-4;
 }
 
-/* A dot of each pastel in the context menu's Colour list */
 .note-swatch {
 	@apply size-3.5 shrink-0 rounded-full border border-black/15;
 }
 
-/* The popover is portaled out of the component, so it can't be scoped */
+/* Portaled, so it can't be scoped */
 :global(.note-details) {
 	@apply w-auto text-sm;
 }

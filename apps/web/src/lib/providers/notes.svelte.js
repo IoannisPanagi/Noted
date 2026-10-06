@@ -1,6 +1,5 @@
 import { upsert, without } from '$lib/utils/collection.js';
 
-// Exported so notes can offer the palette when changing colour
 export const COLORS = [
 	'bg-powder-blush',
 	'bg-apricot-cream',
@@ -16,26 +15,20 @@ function randomBackgroundColor() {
 	return COLORS[Math.floor(((Math.random() + Math.random() + Math.random()) % 1) * COLORS.length)];
 }
 
-// Every note in the workspace, over the socket; folders and "Show completed"
-// only filter them. It lives as long as the NotesProvider that made it, which
-// takes its listeners off the socket
 export class Notes {
-	// Raw: every change replaces the list
 	list = $state.raw([]);
-	// Until the first load answers
 	loading = $state(true);
 	error = $state.raw(null);
 
 	#socket;
 	#listeners = {
-		// Every (re)connect loads again, so whatever was missed while away comes in
+		// Reloads on every reconnect to catch what was missed
 		connect: () => this.load(),
 		'note.created': (note) => (this.list = upsert(this.list, note)),
 		'note.updated': (note) => (this.list = upsert(this.list, note)),
 		'note.deleted': (id) => (this.list = without(this.list, id)),
 		'notes.cleared': () => (this.list = []),
-		// The server un-assigns a deleted category's notes without sending them
-		// again, so they fall back to "All" here
+		// The server un-assigns a deleted category's notes without resending them
 		'category.deleted': (categoryId) =>
 			(this.list = this.list.map((note) =>
 				note.categoryId === categoryId ? { ...note, categoryId: null } : note,
@@ -47,7 +40,6 @@ export class Notes {
 		for (const [event, handler] of Object.entries(this.#listeners)) socket.on(event, handler);
 	}
 
-	// No filters: done and not done, every category
 	async load() {
 		try {
 			this.list = await this.#socket.emitWithAck('list.notes', {});
@@ -59,7 +51,7 @@ export class Notes {
 		}
 	}
 
-	// A refusal is never acknowledged, so the await times out into the caller's catch
+	// Refusals are never acknowledged, so the await times out into the caller's catch
 	async add(text, categoryId) {
 		const saved = await this.#socket.emitWithAck('add.note', {
 			note: {
