@@ -44,3 +44,23 @@ export function removeActiveCategory() {
 		toast.error(error);
 	}
 }
+
+// Whether notes show their toolbar buttons
+const NOTE_BUTTONS_KEY = 'NOTED_NOTE_BUTTONS';
+
+// state should be a boolean
+export function setNoteButtons(state) {
+	try {
+		localStorage.setItem(NOTE_BUTTONS_KEY, JSON.stringify(state));
+	} catch (error) {
+		toast.error(error);
+	}
+}
+
+export function readNoteButtons() {
+	try {
+		return JSON.parse(localStorage.getItem(NOTE_BUTTONS_KEY));
+	} catch (error) {
+		toast.error(error);
+	}
+}

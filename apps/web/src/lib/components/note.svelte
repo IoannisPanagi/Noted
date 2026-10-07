@@ -24,6 +24,7 @@ import { getNotes } from '$lib/providers/notes-provider.svelte';
 import { focusAtEnd, isPlainEnter } from '$lib/utils.js';
 import { renderMarkdown } from '$lib/utils/markdown.js';
 import SaveHint from './save-hint.svelte';
+import { noteButtons } from '$lib/utils/noteButtons.svelte.js';
 
 // The menu, delete dialog and details popover live in note-grid.svelte, keeping each note cheap
 let { note, hidden = false, editing = $bindable(false), ontoggle, ondelete, ondetails } = $props();
@@ -122,6 +123,7 @@ async function handleEditBlur() {
 		class={['note', note.backgroundColor, overflows && !editing && 'is-expandable', expanded && 'is-expanded']}
 		onclick={handleCardClick}
 	>
+		{#if noteButtons.active}
 		<div class="note-toolbar">
 			<Button
 				variant="ghost"
@@ -156,7 +158,7 @@ async function handleEditBlur() {
 				<Eraser />
 			</Button>
 		</div>
-
+		{/if}
 		{#if editing}
 			<div
 				class="note-font note-editor"
