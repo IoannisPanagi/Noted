@@ -32,5 +32,3 @@ export function focusAction(event, button) {
 	event.preventDefault();
 	button?.focus();
 }
-
-// eslint-disable-next-line @typescript-eslint/no-explicit-any

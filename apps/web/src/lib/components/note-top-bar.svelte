@@ -65,21 +65,21 @@ function handleNewNoteKeydown(e) {
 }
 
 // Only Enter saves; every exit goes through the blur, which decides whether to save
-function saveDescriptionEdit() {
+function handleDescriptionSave() {
 	isSavingDescription = true;
 	descriptionField.blur();
 }
 
-function cancelDescriptionEdit() {
+function handleDescriptionCancel() {
 	descriptionField.blur();
 }
 
 function handleDescriptionKeydown(e) {
 	if (isPlainEnter(e)) {
 		e.preventDefault();
-		saveDescriptionEdit();
+		handleDescriptionSave();
 	}
-	if (e.key === 'Escape') cancelDescriptionEdit();
+	if (e.key === 'Escape') handleDescriptionCancel();
 }
 
 async function handleDescriptionBlur() {
@@ -148,7 +148,7 @@ async function handleLeave() {
 				<PenLine />
 			</Button>
 
-			<SaveHint class="top-bar-description-hint" onsave={saveDescriptionEdit} oncancel={cancelDescriptionEdit} />
+			<SaveHint class="top-bar-description-hint" onsave={handleDescriptionSave} oncancel={handleDescriptionCancel} />
 		</div>
 	</div>
 

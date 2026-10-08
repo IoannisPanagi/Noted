@@ -102,12 +102,12 @@ let deleteTarget = $state.raw(null);
 let isDeleteOpen = $state(false);
 let deleteButton = $state(null);
 
-function open(folder) {
+function handleOpenFolder(folder) {
 	categories.select(folder.id);
 	isMoreOpen = false;
 }
 
-function openForm(category = null) {
+function handleOpenForm(category = null) {
 	editing = category;
 	formLabel = category?.label ?? '';
 	formDescription = category?.description ?? '';
@@ -134,7 +134,7 @@ async function handleFormSubmit(event) {
 	}
 }
 
-function confirmDelete(category) {
+function handleDeleteRequest(category) {
 	deleteTarget = category;
 	isDeleteOpen = true;
 }
@@ -171,7 +171,7 @@ async function handleDelete() {
 								{...props}
 								class={['folder-tab', folder === active && !isMoreOpen && 'is-active']}
 								title={toTitleCase(folder.label)}
-								onclick={() => open(folder)}
+								onclick={() => handleOpenFolder(folder)}
 							>
 								<span class="folder-tab-label">{toTitleCase(folder.label)}</span>
 							</button>
@@ -182,7 +182,7 @@ async function handleDelete() {
 			{/each}
 		</div>
 
-		<button class="folder-tab" aria-label="New category" title="New category" onclick={() => openForm()}>
+		<button class="folder-tab" aria-label="New category" title="New category" onclick={() => handleOpenForm()}>
 			<Plus />
 		</button>
 
@@ -201,7 +201,7 @@ async function handleDelete() {
 									variant={folder === active ? 'secondary' : 'ghost'}
 									class="folder-menu-item"
 									title={toTitleCase(folder.label)}
-									onclick={() => open(folder)}
+									onclick={() => handleOpenFolder(folder)}
 								>
 									<span class="folder-tab-label">{toTitleCase(folder.label)}</span>
 								</Button>
@@ -226,7 +226,7 @@ async function handleDelete() {
 				{#if active !== ALL}
 					<Separator orientation="vertical" class="folder-divider" />
 					<div class="folder-category-actions">
-						<Button variant="ghost" size="icon-sm" aria-label="Edit category" onclick={() => openForm(active)}>
+						<Button variant="ghost" size="icon-sm" aria-label="Edit category" onclick={() => handleOpenForm(active)}>
 							<PenLine />
 						</Button>
 						<Button
@@ -234,7 +234,7 @@ async function handleDelete() {
 							size="icon-sm"
 							class="folder-category-delete"
 							aria-label="Delete category"
-							onclick={() => confirmDelete(active)}
+							onclick={() => handleDeleteRequest(active)}
 						>
 							<Eraser />
 						</Button>
@@ -249,15 +249,15 @@ async function handleDelete() {
 
 {#snippet categoryMenu(folder)}
 	<ContextMenuContent>
-		<ContextMenuItem onSelect={() => openForm()}>
+		<ContextMenuItem onSelect={() => handleOpenForm()}>
 			<Plus /> New category
 		</ContextMenuItem>
 		{#if folder !== ALL}
 			<ContextMenuSeparator />
-			<ContextMenuItem onSelect={() => openForm(folder)}>
+			<ContextMenuItem onSelect={() => handleOpenForm(folder)}>
 				<PenLine /> Edit category
 			</ContextMenuItem>
-			<ContextMenuItem variant="destructive" onSelect={() => confirmDelete(folder)}>
+			<ContextMenuItem variant="destructive" onSelect={() => handleDeleteRequest(folder)}>
 				<Eraser /> Delete category
 			</ContextMenuItem>
 		{/if}

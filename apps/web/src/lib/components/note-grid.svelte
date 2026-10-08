@@ -55,7 +55,7 @@ let isDetailsOpen = $state(false);
 let folders = $derived([{ id: '', label: 'all' }, ...categories.list]);
 
 // No note (or the one being edited) disables the menu, leaving the browser's own for copy and paste
-function pickMenuNote(e) {
+function handleContextMenu(e) {
 	const id = e.target.closest('[data-note-id]')?.dataset.noteId ?? null;
 	menuId = id === editingId ? null : id;
 }
@@ -87,7 +87,7 @@ async function recolour(note, backgroundColor) {
 	}
 }
 
-function confirmDelete(note) {
+function handleDeleteRequest(note) {
 	deleteId = note.id;
 	isDeleteOpen = true;
 }
@@ -124,7 +124,7 @@ function formatDate(isoString) {
 </script>
 
 <ContextMenu>
-	<ContextMenuTrigger disabled={!menuId} oncontextmenu={pickMenuNote}>
+	<ContextMenuTrigger disabled={!menuId} oncontextmenu={handleContextMenu}>
 		{#snippet child({ props })}
 			<div {...props} class="notes-grid">
 				{#each notes.list as note (note.id)}
@@ -139,7 +139,7 @@ function formatDate(isoString) {
 							}
 						}
 						ontoggle={toggleComplete}
-						ondelete={confirmDelete}
+						ondelete={handleDeleteRequest}
 						ondetails={toggleDetails}
 					/>
 				{/each}
@@ -195,7 +195,7 @@ function formatDate(isoString) {
 
 			<ContextMenuSeparator />
 
-			<ContextMenuItem variant="destructive" onSelect={() => confirmDelete(menuNote)}>
+			<ContextMenuItem variant="destructive" onSelect={() => handleDeleteRequest(menuNote)}>
 				<Eraser /> Delete
 			</ContextMenuItem>
 		{/if}

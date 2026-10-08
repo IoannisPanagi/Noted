@@ -77,26 +77,26 @@ function handleCardClick(e) {
 }
 
 function toggleEditing() {
-	if (editing) return cancelEdit();
+	if (editing) return handleEditCancel();
 	editing = true;
 }
 
 // Only Enter saves; every exit goes through the blur, which decides whether to save
-function saveEdit() {
+function handleEditSave() {
 	isSavingEdit = true;
 	editor.blur();
 }
 
-function cancelEdit() {
+function handleEditCancel() {
 	editor.blur();
 }
 
 function handleEditKeydown(e) {
 	if (isPlainEnter(e)) {
 		e.preventDefault();
-		saveEdit();
+		handleEditSave();
 	}
-	if (e.key === 'Escape') cancelEdit();
+	if (e.key === 'Escape') handleEditCancel();
 }
 
 async function handleEditBlur() {
@@ -182,7 +182,7 @@ async function handleEditBlur() {
 
 		<div class="note-footer">
 			{#if editing}
-				<SaveHint onsave={saveEdit} oncancel={cancelEdit} />
+				<SaveHint onsave={handleEditSave} oncancel={handleEditCancel} />
 			{:else}
 				{#if overflows}
 					<button
