@@ -60,6 +60,7 @@ export class WorkspacesController {
 		@Body() workspaceDto: UpdateWorkspaceDto,
 		@Passphrase() passphrase: string,
 	): Promise<Workspace> {
+		// TODO Go through workspacesService.update like the gateway does
 		const workspace = await this.workspacesService.save({
 			...workspaceDto,
 			passphrase,

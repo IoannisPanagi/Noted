@@ -3,6 +3,7 @@ import { z } from 'zod';
 
 export const UpdateNoteSchema = z.object({
 	id: z.string().min(1),
+	// TODO Cap the length of text and backgroundColor
 	text: z.string().min(1),
 	backgroundColor: z.string().min(1),
 	isCompleted: z.boolean(),

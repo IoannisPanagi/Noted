@@ -1,4 +1,5 @@
 <script>
+	// TODO Upgrade the passphrase gate to the new design
 	import { Button } from '$lib/components/ui/button/index.js';
 	import {
 		Card,

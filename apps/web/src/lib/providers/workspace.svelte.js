@@ -29,6 +29,7 @@ export class Workspace {
 		}
 	}
 
+	// TODO Wire up locking workspaces, saving the description currently unlocks a locked one
 	// The server replaces both fields, so an omitted password unlocks the workspace
 	async update({ description, password }) {
 		this.current = await this.#socket.emitWithAck('update.workspace', {

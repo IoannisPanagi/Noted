@@ -54,6 +54,7 @@ export class AuthController {
 		}
 	}
 
+	// TODO Rate limit logins (e.g. @nestjs/throttler)
 	@Public()
 	@Post('/login')
 	@ApiOperation({

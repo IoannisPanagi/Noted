@@ -20,6 +20,7 @@ async function bootstrap() {
 	app.useLogger(app.get(Logger));
 	app.setGlobalPrefix('api');
 
+	// TODO Add a request body size limit
 	app.use(cookieParser());
 
 	// The auth cookie travels cross-origin once the web app is served separately

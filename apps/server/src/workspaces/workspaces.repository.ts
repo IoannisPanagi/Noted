@@ -43,6 +43,7 @@ export class WorkspacesRepository {
 		});
 	}
 
+	// TODO Remove, unused since deleteWithContents replaced it
 	async delete(passphrase: string): Promise<void> {
 		await this.db
 			.delete(workspaces)

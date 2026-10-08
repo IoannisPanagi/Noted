@@ -23,6 +23,7 @@ export class Socket {
 			this.client.emit('join.workspace');
 		});
 
+		// TODO Show a network error page when the server can't be reached, timed out messages aren't toasted
 		// An inactive socket was refused and won't retry
 		this.client.on('connect_error', (error) => {
 			if (this.client.active) return;

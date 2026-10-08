@@ -34,6 +34,7 @@ import { Server, Socket } from 'socket.io';
 	namespace: '/api/workspace',
 	cors: { origin: CORS_ORIGINS, credentials: true },
 })
+// TODO Add a ws exception filter, ZodValidationPipe's HttpException reaches clients as "Internal server error"
 // Acks carry only the answer (data, or `true`); refusals throw a WsException, sent as an 'exception' event.
 // Nest never acks null or undefined, so every handler a client awaits must return something
 export class RealtimeGateway {
@@ -50,6 +51,7 @@ export class RealtimeGateway {
 	private workspacesService!: WorkspacesService;
 
 	//* Joining the workspace via passing through the guard *//
+	// TODO Add a heartbeat that re-validates the connection, only the messages are authenticated
 	@SubscribeMessage('join.workspace')
 	async joinWorkspace(
 		@ConnectedSocket() client: Socket,
@@ -190,6 +192,7 @@ export class RealtimeGateway {
 	}
 
 	//* Workspaces *//
+	// TODO Disconnect the room on a password change, stale sockets keep receiving the room's events
 	async emitWorkspaceUpdated(event: WorkspaceUpdatedEvent) {
 		this.server.to(event.passphrase).emit('auth.refresh', event.passphrase);
 		this.server.to(event.passphrase).emit('workspace.updated', event.workspace);
