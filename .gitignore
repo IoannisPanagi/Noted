@@ -15,6 +15,9 @@ node_modules
 # Local database
 notes-dev.db*
 
+# Local MCP Server
+.mcp.json
+
 # Testing
 coverage
 
