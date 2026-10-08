@@ -14,7 +14,8 @@ Noted is an application for taking post-it notes and sharing with others easily 
 
 ## Standards
 - Function splitting rule of 3, if a given piece of code appears more than twice, (3 and above) then split it into it's own function
-- Avoid huge comment sections, code should be self explaining and have comments made on behavior on short order ("Code does A because B")
+- When writing comments avoid huge comment sections, code should be self explaining and have comments made on behavior on short order ("Code does A because B")
+  - Sometimes the user will leave more descriptive comments to indicate on why a certain piece of code is the way it is or to explain a linter issue such as missing property.
 - Use relevant skills when available (Such as svelte-code-writer when writing `.svelte` files)
 
 ### Server Unique
@@ -150,5 +151,5 @@ Do not try out the code via browser, ask the user to try it out and get back to 
 
 Biome has weird interactions with svelte, especially regarding imports and may flag them as unneeded even though they are used in the file  
 notes-dev.db is a copy of a production database with actual data   
-If a migration involves table modification you'll need to write bridging (data transfer) sql to stop the data-loss from occurring.
+If a migration involves table modification you'll need to write bridging (data transfer) sql to stop the data-loss from occurring.  
 Check-types doesn't do anything
