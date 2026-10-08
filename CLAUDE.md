@@ -24,7 +24,7 @@ Noted is an application for taking post-it notes and sharing with others easily 
 - Custom decorators for bypassing the auth guard and obtaining the passphrase based on request 
 
 ### Web Unique
-- Things that happen on events should use the `handler{Action}` format
+- Things that happen on events should use the `handle{Action}` format unless the event would "toggle" between states then it can be `toggle{Action}`
 - All calls via websocket, avoid HTTP requests unless necessary (Authentication and initial entry to the workspace are permitted)
 - Prefer in file `<style>...</style>` over separate stylesheet files unless it's a family of styles that are used by multiple components
 

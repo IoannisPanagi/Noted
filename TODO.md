@@ -21,7 +21,7 @@ Last verified against a live server + scratch DB on 2026-09-22.
   majors broke before: the `^12` swagger crashed at boot on Nest 11
   (`loadPackageSync` is not exported there), so keep them moving together.
 - **Configuration — one entry point**: `constants.ts` is the only thing that
-  reads `process.env`. It loads `.env` itself (`process.loadEnvFile`, without
+  reads `process.env`. It loads `.env` itself (`dotenv`, without
   overriding variables already set) and validates required variables.
   `@nestjs/config` has been removed. `JWT_EXPIRY` is in milliseconds, and
   `JWT_CONSTANTS.EXPIRY_SECONDS` is what `@nestjs/jwt` gets, so the cookie and
@@ -178,6 +178,7 @@ Last verified against a live server + scratch DB on 2026-09-22.
   concurrent writes, the `setWhere` guard at the repository level (only
   reachable by bypassing the controllers), cookie/JWT expiry behaviour, and
   malformed-payload edge cases.
+- **Locking down workspaces**: there majority of the code needed to lock down workspaces exists however it is not wired up to the front-end, for example updating a workspace would unlock it. As of right now there are no locked workspaces so this is not an issue. 
 
 ## Security gaps
 
@@ -282,20 +283,61 @@ old page, its components (masonry, drawer, dialogs, category form), the
 module stores, `$lib/utils/socket.js`, `/new/notes`, `/design` and the
 `new-theme` scoping are gone. The theme lives in `app.css`, fonts and shared
 styles load from `main.js`, and the components sit in `src/lib/components`
-with their CSS in `components/styles/`. The unused `accordion`, `drawer` and
+with their CSS in `components/styles/` (since moved into each component's
+`<style>` block, see below). The unused `accordion`, `drawer` and
 `tabs` UI components and the `svelte-bricks` / `vaul-svelte` dependencies were
 removed. The API URL comes from `VITE_API_URL` (`apps/web/.env`, see
 `.env.example`).
 
+## Cleanup (2026-10-08)
+
+- Component styles moved from `components/styles/` into each component's
+  in-file `<style>` block. Classes on shadcn components use `:global` under a
+  scoped parent; the fonts and the dialog/danger classes shared by three
+  components live in `app.css`.
+- `TokenResDto` moved from `notes/dtos/` to `tokens/dtos/`.
+- Svelte autofixer findings fixed (tab list fitting is an attachment,
+  `isShown` is a plain function).
+- Controllers no longer re-check `passphrase`: `@Passphrase()` already
+  throws when the guard resolved no workspace.
+- Event files all follow `*.event.ts` (`categoryDeleted.event.ts`,
+  `workspaceDestroyed.event.ts`).
+- `constants.ts` loads `.env` through `dotenv` (quiet, no override);
+  `prettier` removed, Biome formats.
+- Web: event handlers are all `handle{Action}` or `toggle{Action}`; the
+  stray eslint comment in `$lib/utils.js` and the empty `$lib/index.js`
+  are gone.
+- **Note buttons toggle** (was an idea): a button next to the light/dark
+  switch, shown on `/notes`, hides every note's toolbar and footer buttons,
+  leaving the right-click menu. On by default, remembered in localStorage
+  (`$lib/utils/noteButtons.svelte.js`).
+
+## Bugs found (2026-10-08)
+
+- **Passphrase gate swallows login failures**: `routes/index.svelte` has no
+  `catch` on `POST /login`, so a refused login (or an unreachable server)
+  only stops the spinner.
+- **"Leave workspace" fails silently**: `handleLeave` assumes the socket
+  provider toasted the error, but logout is an HTTP call, so nothing is
+  shown.
+- **Socket validation errors read "Internal server error"**: the global
+  `ZodValidationPipe` does run on gateway messages, but it throws an
+  `HttpException`, which Nest's websocket filter reports as a generic
+  internal error instead of the validation message. Needs a small ws
+  exception filter (or converting to `WsException`).
+
+## Code tidy-ups (2026-10-08)
+
+- `WorkspacesRepository.delete` is unused (`deleteWithContents` replaced
+  it). `PUT /api/workspaces` calls `save` directly, unlike the gateway
+  which goes through `update`.
+- READMEs (root and `apps/server`) are still the Turborepo / NestJS
+  scaffolding text.
+
 ## Ideas
 
-- **Buttonless notes**: a setting that drops the note's toolbar and footer
-  buttons (done, edit, delete, details), leaving the right-click menu and
-  keybinds as the only way to act on a note. A toggle at the top right, next
-  to the light/dark switch. Worth it beyond looks: a Firefox profile
-  (2026-10-02) put the 4 shadcn `Button`s per note at about half the cost of
-  building a note. Depends on the keybinds (Gmail-style, already decided) and
-  on a way to pick a note from the keyboard.
+- **Keybinds**: Gmail-style keybinds (already decided) and a way to pick a
+  note from the keyboard, so notes stay usable with their buttons hidden.
 
 ## Passphrase gate (after the notes page is complete)
 
@@ -350,5 +392,5 @@ Where the new notes page improves on the existing one.
   backgrounds), fonts (Noto Sans, Comic Neue for notes), one red, one radius,
   and shadcn components throughout, where the old app mixed reds, radii and
   hand-made buttons.
-- **Tidier code**: the new components keep their styling in per-component CSS
-  files instead of long utility strings in the markup.
+- **Tidier code**: the new components keep their styling in their own
+  scoped `<style>` blocks instead of long utility strings in the markup.
