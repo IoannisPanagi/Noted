@@ -1,9 +1,9 @@
 import { createHmac } from 'node:crypto';
-import { existsSync } from 'node:fs';
+import { config } from 'dotenv';
 import { CookieOptions } from 'express';
 
 // Loads .env without overriding variables already set, before anything reads process.env
-if (existsSync('.env')) process.loadEnvFile('.env');
+config({ quiet: true });
 
 if (!process.env.DB_FILE_NAME)
 	throw new Error('DB_FILE_NAME environment variable required');
