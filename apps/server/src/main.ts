@@ -17,8 +17,6 @@ import { AppModule } from './app.module';
 async function bootstrap() {
 	const app = await NestFactory.create(AppModule, { bufferLogs: true });
 
-	const appLogger = app.get(Logger);
-
 	app.useLogger(app.get(Logger));
 	app.setGlobalPrefix('api');
 
