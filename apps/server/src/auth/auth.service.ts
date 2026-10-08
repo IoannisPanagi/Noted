@@ -1,6 +1,6 @@
 import { Injectable, Logger, UnauthorizedException } from '@nestjs/common';
 import { LoginReqDto } from '@noted/auth/dtos/loginReq.dto';
-import { TokenResDto } from '@noted/notes/dtos/tokenRes.dto';
+import { TokenResDto } from '@noted/tokens/dtos/tokenRes.dto';
 import { TokensService } from '@noted/tokens/tokens.service';
 import { WorkspacesService } from '@noted/workspaces/workspaces.service';
 import bcrypt from 'bcrypt';

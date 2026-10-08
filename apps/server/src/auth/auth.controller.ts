@@ -19,7 +19,7 @@ import {
 import { AuthService } from '@noted/auth/auth.service';
 import { LoginReqDto } from '@noted/auth/dtos/loginReq.dto';
 import { Public } from '@noted/decorators/public.decorator';
-import { TokenResDto } from '@noted/notes/dtos/tokenRes.dto';
+import { TokenResDto } from '@noted/tokens/dtos/tokenRes.dto';
 import { TokensService } from '@noted/tokens/tokens.service';
 import type { Request, Response } from 'express';
 import { ZodResponse } from 'nestjs-zod';
