@@ -1,4 +1,4 @@
-import axios from 'axios';
+import axios, { AxiosError } from 'axios';
 
 const api = axios.create({
 	baseURL: import.meta.env.VITE_API_URL,
@@ -9,13 +9,26 @@ const api = axios.create({
 	timeout: 5000,
 });
 
+// Requests that got no answer carry axios' own wording, so each is given one the UI can show as is
+const noResponseMessages = {
+	[AxiosError.ERR_NETWORK]: 'Server unavailable, please try again later',
+	[AxiosError.ECONNABORTED]:
+		'The server took too long to answer, please try again',
+	[AxiosError.ETIMEDOUT]:
+		'The server took too long to answer, please try again',
+};
+
 api.interceptors.response.use(
 	function onFulfilled(response) {
 		return response;
 	},
 	function onRejected(error) {
-		// No response (offline, timed out) has no body, so the error itself goes on
-		return Promise.reject(error.response?.data ?? error);
+		// The server's body keeps its statusCode, which the workspace provider checks
+		if (error.response) return Promise.reject(error.response.data);
+
+		// Messages that had no response and axios has to fill for them go through this filter for better messaging. (If one is available of course)
+		const message = noResponseMessages[error.code];
+		return Promise.reject(message ? new Error(message) : error);
 	},
 );
 

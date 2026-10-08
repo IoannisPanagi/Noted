@@ -114,8 +114,9 @@ async function handleLeave() {
 		await api.delete('/logout');
 		removeActiveCategory();
 		navigate('/', {}, { mode: 'replace' });
-	} catch {
-		// The socket provider already toasted the error
+	} catch (error) {
+		// Every api rejection carries a readable `message`, see the interceptor in api.js
+		toast.error(error.message);
 	}
 }
 </script>

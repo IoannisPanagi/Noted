@@ -21,7 +21,8 @@
 
 	let passphrase = $state(null);
 	let password = $state(null);
-	let errorText = $state(null);
+	let fieldError = $state(null);
+	let serverError = $state(null);
 
 	let passphraseInput = $state(null);
 
@@ -38,9 +39,10 @@
 		event.preventDefault();
 
 		if (!passphrase) {
-			errorText = 'Passphrase is required';
+			fieldError = 'Passphrase is required';
 		} else {
-			errorText = null;
+			fieldError = null;
+			serverError = null;
 			isLoading = true;
 
 			api.post(
@@ -51,12 +53,17 @@
 				}),
 			)
 				.then(() => navigate('/notes'))
+				.catch((error) => {
+					// Every api rejection carries a readable `message`, see the interceptor in api.js
+					serverError = error.message;
+				})
 				.finally(() => {isLoading = false});
 		}
 	}
 
 	function handleKeyDownWindow(e) {
 		const el = document.activeElement;
+		// element.isContentEditable is a field that asks if the given element is editable (for example text boxes or elements with the `contenteditable` property)
 		if (el instanceof HTMLInputElement || el instanceof HTMLTextAreaElement || el?.isContentEditable) return;
 
 		const altGr = e.getModifierState('AltGraph');
@@ -91,8 +98,11 @@
 		</CardHeader>
 		<CardContent>
 			<form onsubmit={handleSubmit} noValidate>
-				<InputGroup class={errorText !== null ? 'border-red-500' : ''}>
-				<InputGroupInput
+				{#if serverError}
+					<p class="text-red-500 pb-3">{serverError}</p>
+				{/if}
+				<InputGroup class={fieldError !== null ? 'border-red-500' : ''}>
+					<InputGroupInput
 						id="passphrase"
 						name="passphrase"
 						type="text"
@@ -101,9 +111,9 @@
 						bind:ref={passphraseInput}
 						onkeydown={handleInputKeydown}
 					/>
-					{#if errorText}
+					{#if fieldError}
 						<InputGroupText class="text-red-500 pe-3">
-							{errorText}
+							{fieldError}
 						</InputGroupText>
 					{/if}
 					<!--				<InputGroup class="mt-4">-->
