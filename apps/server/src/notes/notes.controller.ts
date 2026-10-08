@@ -46,8 +46,6 @@ export class NotesController {
 		@Query('complete', new ParseBoolPipe({ optional: true }))
 		complete?: boolean,
 	) {
-		if (!passphrase) throw new BadRequestException('No passphrase');
-
 		return this.notesService.findAllByPassphrase(passphrase, complete);
 	}
 
@@ -66,7 +64,6 @@ export class NotesController {
 		@Query('complete', new ParseBoolPipe({ optional: true }))
 		complete?: boolean,
 	) {
-		if (!passphrase) throw new BadRequestException('No passphrase');
 		if (!label) throw new BadRequestException('Category label missing?');
 
 		return this.notesService.findAllByPassphraseAndCategoryLabel(
@@ -84,7 +81,6 @@ export class NotesController {
 		@Passphrase() passphrase: string,
 		@Param('id') id: string,
 	) {
-		if (!passphrase) throw new BadRequestException('No passphrase');
 		if (!id) throw new BadRequestException('Note id missing?');
 
 		const note = await this.notesService.findByPassphraseAndId(passphrase, id);
@@ -107,8 +103,6 @@ export class NotesController {
 		@Body() { note }: CreateNoteReqDto,
 		@Passphrase() passphrase: string,
 	) {
-		if (!passphrase) throw new BadRequestException('No passphrase');
-
 		return await this.notesService.create(note, passphrase);
 	}
 
@@ -126,7 +120,6 @@ export class NotesController {
 		@Passphrase() passphrase: string,
 		@Param('id') id: string,
 	) {
-		if (!passphrase) throw new BadRequestException('No passphrase');
 		if (!id) throw new BadRequestException('Note id missing?');
 		if (id !== note.id)
 			throw new BadRequestException('Note id and route id are mismatched');
@@ -146,8 +139,6 @@ export class NotesController {
 		description: 'Categories and the workspace itself are left alone.',
 	})
 	public async deleteAllByPassphrase(@Passphrase() passphrase: string) {
-		if (!passphrase) throw new BadRequestException('No passphrase');
-
 		await this.notesService.deleteAllByPassphrase(passphrase);
 	}
 
@@ -159,7 +150,6 @@ export class NotesController {
 		@Passphrase() passphrase: string,
 		@Param('id') id: string,
 	) {
-		if (!passphrase) throw new BadRequestException('No passphrase');
 		if (!id) throw new BadRequestException('Note id missing?');
 
 		const deleted = await this.notesService.delete(passphrase, id);

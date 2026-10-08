@@ -32,8 +32,6 @@ export class CategoriesController {
 	@HttpCode(HttpStatus.OK)
 	@ApiOperation({ summary: "List the workspace's categories" })
 	public async findAllByPassphrase(@Passphrase() passphrase: string) {
-		if (!passphrase) throw new BadRequestException('No passphrase');
-
 		return this.categoriesService.findAllByPassphrase(passphrase);
 	}
 
@@ -52,8 +50,6 @@ export class CategoriesController {
 		@Body() categoryDto: CreateCategoryDto,
 		@Passphrase() passphrase: string,
 	) {
-		if (!passphrase) throw new BadRequestException('No passphrase');
-
 		return await this.categoriesService.create(categoryDto, passphrase);
 	}
 
@@ -77,7 +73,6 @@ export class CategoriesController {
 		@Passphrase() passphrase: string,
 		@Param('id') id: string,
 	) {
-		if (!passphrase) throw new BadRequestException('No passphrase');
 		if (!id) throw new BadRequestException('Category id missing?');
 		if (id !== categoryDto.id)
 			throw new BadRequestException('Category id and route id are mismatched');
@@ -104,7 +99,6 @@ export class CategoriesController {
 		@Passphrase() passphrase: string,
 		@Param('id') id: string,
 	) {
-		if (!passphrase) throw new BadRequestException('No passphrase');
 		if (!id) throw new BadRequestException('Category id missing?');
 
 		const deleted = await this.categoriesService.delete(passphrase, id);

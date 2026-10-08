@@ -1,6 +1,5 @@
 import { APP_AUTH_COOKIE_NAME, DEFAULT_COOKIE_SETTINGS } from '@constants';
 import {
-	BadRequestException,
 	Body,
 	Controller,
 	Delete,
@@ -52,6 +51,11 @@ export class WorkspacesController {
 
 	@Put()
 	@HttpCode(HttpStatus.OK)
+	@ApiOperation({
+		summary: 'Update the workspace',
+		description:
+			'Replaces both the description and the password; an omitted password unlocks the workspace. Changing the password logs every session out.',
+	})
 	public async updateWorkspace(
 		@Body() workspaceDto: UpdateWorkspaceDto,
 		@Passphrase() passphrase: string,
@@ -80,8 +84,6 @@ export class WorkspacesController {
 		@Passphrase() passphrase: string,
 		@Res({ passthrough: true }) res: Response,
 	) {
-		if (!passphrase) throw new BadRequestException('No passphrase');
-
 		await this.workspacesService.delete(passphrase, workspaceDto.password);
 
 		// The workspace is gone, so this client's session goes with it
