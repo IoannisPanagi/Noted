@@ -1,7 +1,7 @@
 import { Injectable } from '@nestjs/common';
 import { OnEvent } from '@nestjs/event-emitter';
 import { RealtimeGateway } from '@noted/realtime/realtime.gateway';
-import type { WorkspaceDestroyedEvent } from '@noted/workspaces/events/workspaceDestroyedEvent';
+import type { WorkspaceDestroyedEvent } from '@noted/workspaces/events/workspaceDestroyed.event';
 import type { WorkspaceUpdatedEvent } from '@noted/workspaces/events/workspaceUpdated.event';
 
 @Injectable()

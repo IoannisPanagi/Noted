@@ -1,7 +1,7 @@
 import { Injectable } from '@nestjs/common';
 import { OnEvent } from '@nestjs/event-emitter';
 import type { CategoryCreatedEvent } from '@noted/categories/events/categoryCreated.event';
-import type { CategoryDeletedEvent } from '@noted/categories/events/categoryDeleted';
+import type { CategoryDeletedEvent } from '@noted/categories/events/categoryDeleted.event';
 import type { CategoryUpdatedEvent } from '@noted/categories/events/categoryUpdated.event';
 import { RealtimeGateway } from '@noted/realtime/realtime.gateway';
 
