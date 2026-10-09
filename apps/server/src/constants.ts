@@ -5,10 +5,8 @@ import { CookieOptions } from 'express';
 // Loads .env without overriding variables already set, before anything reads process.env
 config({ quiet: true });
 
-if (!process.env.DB_FILE_NAME)
-	throw new Error('DB_FILE_NAME environment variable required');
 export const DB = 'SQLITE_DATABASE';
-export const DB_CONNECTION = process.env.DB_FILE_NAME;
+export const DB_CONNECTION = process.env.DB_FILE_NAME ?? 'noted.db';
 export const APP_NAME = 'Noted';
 export const APP_VERSION = '1.0 (Solaris)';
 export const APP_AUTH_COOKIE_NAME = `${APP_NAME}-authentication`;
@@ -18,14 +16,14 @@ export const APP_WORKSPACE_LOCAL_NAME = 'NOTED_WORKSPACE';
 
 if (!process.env.JWT_SECRET)
 	throw new Error('JWT_SECRET environment variable required');
-if (!process.env.JWT_EXPIRY)
-	throw new Error('JWT_EXPIRY environment variable required');
+// 12 hours in milliseconds
+const JWT_EXPIRY = Number(process.env.JWT_EXPIRY ?? 43_200_000);
 export const JWT_CONSTANTS = {
 	SECRET: process.env.JWT_SECRET,
 	// Milliseconds, as JWT_EXPIRY is documented and as the cookie's maxAge expects
-	EXPIRY: +process.env.JWT_EXPIRY,
+	EXPIRY: JWT_EXPIRY,
 	// jsonwebtoken reads a numeric expiresIn as seconds
-	EXPIRY_SECONDS: Math.floor(+process.env.JWT_EXPIRY / 1000),
+	EXPIRY_SECONDS: Math.floor(JWT_EXPIRY / 1000),
 };
 
 // CORS stays off without origins, which suits same-origin or proxied deployments
