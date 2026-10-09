@@ -1,5 +1,4 @@
 <script>
-	// TODO Upgrade the passphrase gate to the new design
 	import { Button } from '$lib/components/ui/button/index.js';
 	import {
 		Card,
@@ -12,17 +11,19 @@
 		InputGroup,
 		InputGroupInput, InputGroupText,
 	} from '$lib/components/ui/input-group/index.js';
+	import { Kbd } from '$lib/components/ui/kbd/index.js';
 	import { Spinner } from '$lib/components/ui/spinner/index.js';
 	import { api } from '$lib/utils/api';
+	import { CornerDownLeft } from '@lucide/svelte';
 	import { goto } from '@roxi/routify';
     import { onMount } from 'svelte';
+	import { toast } from 'svelte-sonner';
 
 	let isLoading = $state(false);
 
 	let passphrase = $state(null);
 	let password = $state(null);
 	let fieldError = $state(null);
-	let serverError = $state(null);
 
 	let passphraseInput = $state(null);
 
@@ -42,7 +43,6 @@
 			fieldError = 'Passphrase is required';
 		} else {
 			fieldError = null;
-			serverError = null;
 			isLoading = true;
 
 			api.post(
@@ -55,7 +55,7 @@
 				.then(() => navigate('/notes'))
 				.catch((error) => {
 					// Every api rejection carries a readable `message`, see the interceptor in api.js
-					serverError = error.message;
+					toast.error(error.message);
 				})
 				.finally(() => {isLoading = false});
 		}
@@ -89,18 +89,19 @@
 <div
 	class="container mx-auto h-screen flex flex-col justify-center items-center"
 >
+	<header class="gate-header">
+		<h1 class="gate-title">NOTED</h1>
+		<p class="gate-tagline">Team organizing at its simplest</p>
+	</header>
 	<Card class="md:w-1/2 w-full">
 		<CardHeader>
-			<CardTitle>Passphrase Gate</CardTitle>
-			<CardDescription
-				>Enter a passphrase to access a notes board</CardDescription
-			>
+			<CardTitle>Workspace Gate</CardTitle>
+			<CardDescription>
+				Enter a passphrase to access a notes board
+			</CardDescription>
 		</CardHeader>
 		<CardContent>
 			<form onsubmit={handleSubmit} noValidate>
-				{#if serverError}
-					<p class="text-red-500 pb-3">{serverError}</p>
-				{/if}
 				<InputGroup class={fieldError !== null ? 'border-red-500' : ''}>
 					<InputGroupInput
 						id="passphrase"
@@ -126,15 +127,46 @@
 					<!--						<InputGroupText class="italic">Optional</InputGroupText>-->
 					<!--					</InputGroupAddon>-->
 				</InputGroup>
-				<Button type="submit" class="mt-5" size="lg" disabled={isLoading}>
-					{#if isLoading}
-						<Spinner />
-						Processing...
-					{:else}
-						Submit
-					{/if}
-				</Button>
+				<div class="gate-actions">
+					<span class="gate-hint">
+						Press <Kbd><CornerDownLeft /> Enter</Kbd> to open the workspace
+					</span>
+					<Button type="submit" size="lg" disabled={isLoading}>
+						{#if isLoading}
+							<Spinner />
+							Opening...
+						{:else}
+							Open board
+						{/if}
+					</Button>
+				</div>
 			</form>
 		</CardContent>
 	</Card>
 </div>
+
+<style>
+@reference "../app.css";
+
+.gate-header {
+	@apply mb-6 text-center absolute 2xl:top-[20%] top-[15%];
+}
+
+.gate-title {
+	@apply text-7xl font-black tracking-wide;
+
+}
+
+.gate-tagline {
+	@apply mt-1 text-2xl text-muted-foreground;
+	font-family: "Comic Neue", cursive;
+}
+
+.gate-actions {
+	@apply mt-5 flex flex-wrap items-center gap-3;
+}
+
+.gate-hint {
+	@apply flex items-center gap-1 ms-auto text-xs text-muted-foreground;
+}
+</style>

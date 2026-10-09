@@ -314,12 +314,11 @@ removed. The API URL comes from `VITE_API_URL` (`apps/web/.env`, see
 
 ## Bugs found (2026-10-08)
 
-- **Passphrase gate swallows login failures**: `routes/index.svelte` has no
-  `catch` on `POST /login`, so a refused login (or an unreachable server)
-  only stops the spinner.
-- **"Leave workspace" fails silently**: `handleLeave` assumes the socket
-  provider toasted the error, but logout is an HTTP call, so nothing is
-  shown.
+- **Passphrase gate swallows login failures** (fixed 2026-10-09): the gate
+  now shows refused logins and server errors.
+- **"Leave workspace" fails silently** (fixed 2026-10-09): logout failures
+  are toasted. The `api.js` interceptor turns an unreachable server or a
+  timeout into a readable `message` for every caller.
 - **Socket validation errors read "Internal server error"**: the global
   `ZodValidationPipe` does run on gateway messages, but it throws an
   `HttpException`, which Nest's websocket filter reports as a generic
@@ -339,9 +338,18 @@ removed. The API URL comes from `VITE_API_URL` (`apps/web/.env`, see
 - **Keybinds**: Gmail-style keybinds (already decided) and a way to pick a
   note from the keyboard, so notes stay usable with their buttons hidden.
 
-## Passphrase gate (after the notes page is complete)
+## Workspace gate
 
-- Upgrade it to the new design.
+Renamed from "Passphrase gate". The current look stays; no redesign planned.
+
+- **Recent boards (idea)**: quick "buttons" down the left and right sides of
+  the page, each at a random tilt, that open a previously accessed board in
+  one click. Locked workspaces are left out.
+  - Remembered in localStorage like the other settings (IndexedDB would also
+    work).
+  - A login that succeeded with a password counts as locked and isn't
+    remembered (`if (password) return;`), so the server doesn't need to
+    expose a lock flag.
 
 ## Pages to build
 
