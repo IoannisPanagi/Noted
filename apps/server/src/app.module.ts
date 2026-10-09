@@ -17,6 +17,8 @@ import { ZodSerializerInterceptor, ZodValidationPipe } from 'nestjs-zod';
 		LoggerModule.forRoot({
 			pinoHttp: {
 				level: LOG_LEVEL,
+				// Per-request "request completed" lines are noise
+				autoLogging: false,
 				// The auth cookie is a JWT whose payload carries the workspace
 				// passphrase, a credential that must never reach the logs
 				redact: ['req.headers.cookie', 'res.headers["set-cookie"]'],
