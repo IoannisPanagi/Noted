@@ -330,8 +330,6 @@ removed. The API URL comes from `VITE_API_URL` (`apps/web/.env`, see
 - `WorkspacesRepository.delete` is unused (`deleteWithContents` replaced
   it). `PUT /api/workspaces` calls `save` directly, unlike the gateway
   which goes through `update`.
-- READMEs (root and `apps/server`) are still the Turborepo / NestJS
-  scaffolding text.
 
 ## Ideas
 

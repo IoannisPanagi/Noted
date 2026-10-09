@@ -1,159 +1,180 @@
-# Turborepo starter
+# Noted - Post-It Notes Webapp
 
-This Turborepo starter is maintained by the Turborepo core team.
+> **Not available as of right now**
 
-## Using this example
+A lightweight post-it notes application for taking notes and sharing them with others, without making accounts. Pick a passphrase, and everyone who knows it shares the same workspace in real time.
 
-Run the following command:
+## Features
 
-```sh
-npx create-turbo@latest
+- Create and manage post-it notes, markdown support included
+- Notes get a random color on creation
+- Marking notes as completed
+- Organise your notes into categories
+- Workspaces identified by a passphrase, no accounts needed
+- Real-time sync between everyone in the same workspace
+- Clean and intuitive user interface made with shadcn-svelte
+- Light and dark theme
+- Persistent storage for your settings!
+- Easy Docker deployment
+
+---
+
+## Why Noted?
+
+**No Accounts**  
+Enter a passphrase and you are in. Share the passphrase with family, friends or team members and they see the same notes. Lock the workspace with a password if you want to keep it private.
+
+**Real-Time**  
+Changes are pushed as they happen, so everyone in a workspace sees new and updated notes instantly.
+
+**Ease of Use**  
+Deploy in under a minute with Docker Compose. No database setup, no external dependencies. Just create the compose file and run a single command.
+
+**Lightweight**  
+Noted uses minimal system resources, making it a good fit for personal servers, Raspberry Pis, or running alongside other services.
+
+**Privacy First**  
+Your notes never leave your machine. All data is stored locally in a Docker volume with no external API calls or telemetry. You have complete control over your information.
+
+**Self-Contained**  
+Everything runs in a single Docker container. No need to install Node.js, manage dependencies, or worry about system compatibility. Works the same on Linux, macOS, and Windows.
+
+**Data Portability**  
+Your notes are stored in a standard Docker volume that can be easily backed up, migrated, or restored. Take your data with you wherever you go.
+
+**Great for organizations**  
+Hosting your own copy that you can use to share workload between the teams!
+
+---
+
+## Quick Start with Docker
+
+Deploy Noted using Docker Compose.
+
+### Prerequisites
+
+- Docker installed on your system
+- Docker Compose (usually included with Docker Desktop)
+
+### Deployment
+
+Create a `compose.yaml` file:
+
+```yaml
+services:
+  noted:
+    image: ioannispanagi/noted:latest
+
+    container_name: noted
+
+    ports:
+      - "3000:3000"
+
+    environment:
+      - JWT_SECRET=change-me
+      - PWF_SECRET=change-me-too
+
+    volumes:
+      - noted-data:/app/data
+
+    restart: unless-stopped
+
+volumes:
+  noted-data:
 ```
 
-## What's inside?
+Replace both secrets with your own random values, for example generated with:
 
-This Turborepo includes the following packages/apps:
-
-### Apps and Packages
-
-- `docs`: a [Next.js](https://nextjs.org/) app
-- `web`: another [Next.js](https://nextjs.org/) app
-- `@repo/ui`: a stub React component library shared by both `web` and `docs` applications
-- `@repo/eslint-config`: `eslint` configurations (includes `@next/eslint-plugin-next` and `eslint-config-prettier`)
-- `@repo/typescript-config`: `tsconfig.json`s used throughout the monorepo
-
-Each package/app is 100% [TypeScript](https://www.typescriptlang.org/).
-
-### Utilities
-
-This Turborepo has some additional tools already setup for you:
-
-- [TypeScript](https://www.typescriptlang.org/) for static type checking
-- [ESLint](https://eslint.org/) for code linting
-- [Prettier](https://prettier.io) for code formatting
-
-### Build
-
-To build all apps and packages, run the following command:
-
-With [global `turbo`](https://turborepo.dev/docs/getting-started/installation#global-installation) installed (recommended):
-
-```sh
-cd my-turborepo
-turbo build
+```bash
+openssl rand -base64 32
 ```
 
-Without global `turbo`, use your package manager:
+Run the application:
 
-```sh
-cd my-turborepo
-npx turbo build
-pnpm exec turbo build
-pnpm exec turbo build
+```bash
+docker compose up -d
 ```
 
-You can build a specific package by using a [filter](https://turborepo.dev/docs/crafting-your-repository/running-tasks#using-filters):
+Access at `http://localhost:3000`
 
-With [global `turbo`](https://turborepo.dev/docs/getting-started/installation#global-installation) installed:
+### Configuration
 
-```sh
-turbo build --filter=docs
+| Environment Variable | Default    | Description                                                                                      |
+|----------------------|------------|--------------------------------------------------------------------------------------------------|
+| `JWT_SECRET`         |            | **Required.** Secret used to sign logins, must be 256 bits long                                  |
+| `PWF_SECRET`         |            | **Required.** Secret used to protect workspace passwords, keep it different from `JWT_SECRET`    |
+| `JWT_EXPIRY`         | `43200000` | How long a login lasts, in milliseconds (12 hours by default)                                    |
+| `PORT`               | `3000`     | Port the application runs on inside the container                                                |
+| `LOG_LEVEL`          | `info`     | How much the server logs: `silent`, `fatal`, `error`, `warn`, `info`, `debug`, `trace`           |
+| `DB_FILE_NAME`       | `noted.db` | Name of the database file inside the data volume                                                 |
+
+Changing `JWT_SECRET` or `PWF_SECRET` logs everybody out, so set them once and keep them.
+
+### Data Persistence
+
+Your notes are stored in a Docker volume named `noted-data`. This ensures your data persists even when the container is stopped or removed.
+
+**To back up your data:**
+```bash
+docker run --rm -v noted-data:/data -v $(pwd):/backup alpine tar czf /backup/noted-backup.tar.gz -C /data .
 ```
 
-Without global `turbo`:
-
-```sh
-npx turbo build --filter=docs
-pnpm exec turbo build --filter=docs
-pnpm exec turbo build --filter=docs
+**To restore from backup:**
+```bash
+docker run --rm -v noted-data:/data -v $(pwd):/backup alpine tar xzf /backup/noted-backup.tar.gz -C /data
 ```
 
-### Develop
+Stop the container before backing up or restoring to make sure the copy is consistent.
 
-To develop all apps and packages, run the following command:
+---
 
-With [global `turbo`](https://turborepo.dev/docs/getting-started/installation#global-installation) installed (recommended):
+## Changing the Port
 
-```sh
-cd my-turborepo
-turbo dev
+If you are already using port 3000, you can freely change it in the `compose.yaml` file:
+
+```yaml
+ports:
+  - "8080:3000"  # Change 8080 to your desired port
 ```
 
-Without global `turbo`, use your package manager:
+Then access the app at `http://localhost:8080`
 
-```sh
-cd my-turborepo
-npx turbo dev
-pnpm exec turbo dev
-pnpm exec turbo dev
+---
+
+## Troubleshooting
+
+### Port already in use
+If you see an error about port 3000 being in use:
+1. Change the port mapping in `compose.yaml` (see "Changing the Port" above)
+2. Or stop the service using port 3000
+
+### Container won't start
+Check the logs for errors:
+```bash
+docker compose logs noted
 ```
 
-You can develop a specific package by using a [filter](https://turborepo.dev/docs/crafting-your-repository/running-tasks#using-filters):
+A missing `JWT_SECRET` or `PWF_SECRET` stops the container from starting.
 
-With [global `turbo`](https://turborepo.dev/docs/getting-started/installation#global-installation) installed:
+### Everybody got logged out
+This happens when `JWT_SECRET` or `PWF_SECRET` changes. Keep them the same between restarts.
 
-```sh
-turbo dev --filter=web
+### Data not persisting
+Ensure the volume is properly created:
+```bash
+docker volume ls | grep noted-data
 ```
 
-Without global `turbo`:
+---
 
-```sh
-npx turbo dev --filter=web
-pnpm exec turbo dev --filter=web
-pnpm exec turbo dev --filter=web
-```
+## License
 
-### Remote Caching
+This project is licensed under the GNU General Public License v3.0 - see the [LICENSE](LICENSE) file for details.
 
-> [!TIP]
-> Vercel Remote Cache is free for all plans. Get started today at [vercel.com](https://vercel.com/signup?utm_source=remote-cache-sdk&utm_campaign=free_remote_cache).
+This means you are free to use, modify, and distribute this software, but any derivative works must also be open source under the same license.
 
-Turborepo can use a technique known as [Remote Caching](https://turborepo.dev/docs/core-concepts/remote-caching) to share cache artifacts across machines, enabling you to share build caches with your team and CI/CD pipelines.
+---
 
-By default, Turborepo will cache locally. To enable Remote Caching you will need an account with Vercel. If you don't have an account you can [create one](https://vercel.com/signup?utm_source=turborepo-examples), then enter the following commands:
+## Support
 
-With [global `turbo`](https://turborepo.dev/docs/getting-started/installation#global-installation) installed (recommended):
-
-```sh
-cd my-turborepo
-turbo login
-```
-
-Without global `turbo`, use your package manager:
-
-```sh
-cd my-turborepo
-npx turbo login
-pnpm exec turbo login
-pnpm exec turbo login
-```
-
-This will authenticate the Turborepo CLI with your [Vercel account](https://vercel.com/docs/concepts/personal-accounts/overview).
-
-Next, you can link your Turborepo to your Remote Cache by running the following command from the root of your Turborepo:
-
-With [global `turbo`](https://turborepo.dev/docs/getting-started/installation#global-installation) installed:
-
-```sh
-turbo link
-```
-
-Without global `turbo`:
-
-```sh
-npx turbo link
-pnpm exec turbo link
-pnpm exec turbo link
-```
-
-## Useful Links
-
-Learn more about the power of Turborepo:
-
-- [Tasks](https://turborepo.dev/docs/crafting-your-repository/running-tasks)
-- [Caching](https://turborepo.dev/docs/crafting-your-repository/caching)
-- [Remote Caching](https://turborepo.dev/docs/core-concepts/remote-caching)
-- [Filtering](https://turborepo.dev/docs/crafting-your-repository/running-tasks#using-filters)
-- [Configuration Options](https://turborepo.dev/docs/reference/configuration)
-- [CLI Usage](https://turborepo.dev/docs/reference/command-line-reference)
+For issues, questions, or contributions you are at the right place!
