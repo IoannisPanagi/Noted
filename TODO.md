@@ -22,7 +22,9 @@ Last verified against a live server + scratch DB on 2026-09-22.
   (`loadPackageSync` is not exported there), so keep them moving together.
 - **Configuration — one entry point**: `constants.ts` is the only thing that
   reads `process.env`. It loads `.env` itself (`dotenv`, without
-  overriding variables already set) and validates required variables.
+  overriding variables already set) and validates required variables
+  (`JWT_SECRET`, `PWF_SECRET`). `JWT_EXPIRY` defaults to 12 hours and
+  `DB_FILE_NAME` to `noted.db`, so neither is required any more.
   `@nestjs/config` has been removed. `JWT_EXPIRY` is in milliseconds, and
   `JWT_CONSTANTS.EXPIRY_SECONDS` is what `@nestjs/jwt` gets, so the cookie and
   the token now both last the same 12h.
@@ -143,8 +145,9 @@ Last verified against a live server + scratch DB on 2026-09-22.
   leaves CORS off otherwise, which is what a same-origin or reverse-proxied
   deployment wants. `PORT` moved into `constants.ts` as `APP_PORT` too, so
   `main.ts` no longer reads `process.env` directly.
-- **Logging**: `nestjs-pino`, one log line per request via pino-http, level
-  from an optional `LOG_LEVEL` (pino's names, default `info`). The auth
+- **Logging**: `nestjs-pino`, level from an optional `LOG_LEVEL` (pino's
+  names, default `info`). pino-http's per-request "request completed" lines
+  are silenced (`autoLogging: false`), since they were noise. The auth
   cookie is redacted, since its JWT carries the passphrase. Rules in
   `ERRORS-CORRECTION-API.md` §10.
 - **OpenAPI docs**: `@nestjs/swagger` serves Swagger UI at `/api/docs`
@@ -318,7 +321,8 @@ removed. The API URL comes from `VITE_API_URL` (`apps/web/.env`, see
   now shows refused logins and server errors.
 - **"Leave workspace" fails silently** (fixed 2026-10-09): logout failures
   are toasted. The `api.js` interceptor turns an unreachable server or a
-  timeout into a readable `message` for every caller.
+  timeout into a readable `message` for every caller, and keeps axios's
+  `code` on it so a caller can tell a dead server from a slow one.
 - **Socket validation errors read "Internal server error"**: the global
   `ZodValidationPipe` does run on gateway messages, but it throws an
   `HttpException`, which Nest's websocket filter reports as a generic
@@ -349,13 +353,20 @@ Renamed from "Passphrase gate". The current look stays; no redesign planned.
     remembered (`if (password) return;`), so the server doesn't need to
     expose a lock flag.
 
-## Pages to build
+## Pages (2026-10-10)
 
-- **404 page**: `[...fallback].svelte` catches unknown routes; give it a real
-  page in the new design.
-- **Network error page**: for when the server can't be reached. Timed-out
-  socket messages aren't toasted (only the server's `exception` events are),
-  so a dropped connection currently fails silently.
+- **404 page** (built): `[...fallback].svelte` shows the crying toast
+  (`$lib/assets/404_toast.png`), a short message and a "Back to the gate"
+  button.
+- **Network page** (built, not linked yet): `/network` calls
+  `GET /api/health` on mount and shows one of six states — checking, healthy,
+  server unreachable, server not responding (timeout), database unavailable
+  (503) or unknown — with a progress bar (shadcn `progress`, newly installed),
+  "Check again", and "Back to the gate" once healthy.
+  - **Still to do**: nothing sends the user there. Timed-out socket messages
+    aren't toasted (only the server's `exception` events are), so a dropped
+    connection still fails silently; see the TODO in `socket.svelte.js`.
+- **Favicon** redrawn.
 
 ## Technological Advancements
 
