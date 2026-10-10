@@ -24,6 +24,8 @@ What was done on each day, newest day first. Built from the commit history;
 - Silenced pino-http's "request completed" logs.
 - Added LICENSE, rewrote the README for end users, removed the NestJS starter
   README.
+- Editing a note or the workspace description survives switching to another
+  window; it used to be thrown away.
 - Moved `TODO.md` and `ERRORS-CORRECTION-API.md` into `docs/`, started this
   diary and moved the dated log entries out of the TODO into it.
 

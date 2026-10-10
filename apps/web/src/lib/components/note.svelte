@@ -100,6 +100,9 @@ function handleEditKeydown(e) {
 }
 
 async function handleEditBlur() {
+	// The window lost focus, not the editor: it gets focus back with the window, so the edit is kept
+	if (!document.hasFocus()) return;
+
 	const text = editingText;
 	const shouldSave = isSavingEdit && text.trim() && text !== note.text;
 	isSavingEdit = false;

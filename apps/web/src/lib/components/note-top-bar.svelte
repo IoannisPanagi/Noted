@@ -83,6 +83,9 @@ function handleDescriptionKeydown(e) {
 }
 
 async function handleDescriptionBlur() {
+	// The window lost focus, not the field: it gets focus back with the window, so the edit is kept
+	if (!document.hasFocus()) return;
+
 	const saved = workspace.current?.description ?? '';
 	const shouldSave = isSavingDescription && description !== saved;
 	isSavingDescription = false;

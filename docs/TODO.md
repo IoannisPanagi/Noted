@@ -281,11 +281,13 @@ the first error of the four, otherwise the first still loading.
 
 ## Bugs
 
-- **Edit button sometimes does nothing on a client's first action**: when
-  editing a note is the first thing a client does, the edit button can fail to
-  put the note into its editing state. Intermittent, cause not looked into
-  yet. Editing is `toggleEditing` in `note.svelte` and ends on the editor's
-  blur, which is the first place to look.
+- **Edit button sometimes does nothing on a client's first action**: not
+  reproduced. Editing lasts only while the editor has focus, so a stray blur
+  ends it without a trace. The suspected trigger, the window's focus settling
+  on the click that brings the browser forward, is now ignored (a blur while
+  the window has no focus keeps the edit). A second click on the button still
+  toggles editing off, so a double click looks the same. Remove this entry if
+  it stops happening.
 - **Socket validation errors read "Internal server error"**: the global
   `ZodValidationPipe` does run on gateway messages, but it throws an
   `HttpException`, which Nest's websocket filter reports as a generic
