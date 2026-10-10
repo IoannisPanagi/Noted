@@ -5,7 +5,8 @@ import { api } from '$lib/utils/api.js';
 // Not connected here: connect() runs once listeners are added, so nothing sent on connect is missed
 export class Socket {
 	// Rejected messages are never answered (see 'exception'), so acks time out into the caller's catch
-	client = io(`${import.meta.env.VITE_API_URL}/workspace`, {
+	// Same origin: the dev server or nginx forwards it to the API
+	client = io('/api/workspace', {
 		withCredentials: true,
 		autoConnect: false,
 		ackTimeout: 5000,
