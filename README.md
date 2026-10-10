@@ -20,7 +20,7 @@ A lightweight post-it notes application for taking notes and sharing them with o
 ## Why Noted?
 
 **No Accounts**  
-Enter a passphrase and you are in. Share the passphrase with family, friends or team members and they see the same notes. Lock the workspace with a password if you want to keep it private.
+Enter a passphrase and you are in. Share the passphrase with family, friends or team members and they see the same notes.
 
 **Real-Time**  
 Changes are pushed as they happen, so everyone in a workspace sees new and updated notes instantly.
