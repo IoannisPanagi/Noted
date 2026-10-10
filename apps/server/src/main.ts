@@ -19,6 +19,8 @@ async function bootstrap() {
 
 	app.useLogger(app.get(Logger));
 	app.setGlobalPrefix('api');
+	// Node ignores SIGTERM as a container's main process unless something listens for it
+	app.enableShutdownHooks();
 
 	// TODO Add a request body size limit
 	app.use(cookieParser());
