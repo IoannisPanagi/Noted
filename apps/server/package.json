@@ -1,6 +1,6 @@
 {
 	"name": "server",
-	"version": "1.0 (Solaris)",
+	"version": "1.0.1 (Solaris)",
 	"private": true,
 	"scripts": {
 		"build": "nest build",

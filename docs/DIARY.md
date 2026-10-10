@@ -28,6 +28,12 @@ What was done on each day, newest day first. Built from the commit history;
   window; it used to be thrown away.
 - Moved `TODO.md` and `ERRORS-CORRECTION-API.md` into `docs/`, started this
   diary and moved the dated log entries out of the TODO into it.
+- The server picks a new note's order (highest + 1) instead of the client, and
+  notes are listed newest first.
+- Notes show their category's label in the "All" view; the note buttons have
+  titles and the new note box has the Enter/Esc hint.
+- The active category tab is no longer bold, it shifted the tabs.
+- Versions: web 1.2.1, server 1.0.1.
 
 ### 2026-10-09
 

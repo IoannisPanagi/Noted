@@ -1,5 +1,6 @@
 {
 	"name": "noted",
+	"Author": "Ioannis Panagi",
 	"private": true,
 	"scripts": {
 		"build": "turbo run build",
