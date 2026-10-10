@@ -1,58 +1,15 @@
 @import "tailwindcss";
 
 @import "tw-animate-css";
-@plugin "@tailwindcss/typography";
+/* The active theme: toasty, dracula or nord */
+@import "./themes/toasty.css";
 
-/* Marine on cool slate, over the porcelain/graphite page */
+@plugin "@tailwindcss/typography";
 
 @custom-variant dark (&:is(.dark *));
 
 :root {
 	--radius: 0.5rem;
-	--background: var(--color-porcelain);
-	--foreground: var(--color-gray-900);
-	--card: var(--color-frost);
-	--card-foreground: var(--color-gray-900);
-	--popover: var(--color-frost);
-	--popover-foreground: var(--color-gray-900);
-	--primary: var(--color-deep-marine);
-	--primary-foreground: var(--color-white);
-	--secondary: var(--color-mist);
-	--secondary-foreground: var(--color-gray-900);
-	--muted: var(--color-haze);
-	--muted-foreground: var(--color-slate-500);
-	--accent: var(--color-mist);
-	--accent-foreground: var(--color-gray-900);
-	--destructive: var(--color-red-600);
-	--border: var(--color-fog);
-	--input: var(--color-cloud);
-	--ring: var(--color-deep-marine);
-	--rich-marine: var(--color-blue-500);
-	--folder: var(--color-folder-yellow);
-	--folder-tab: var(--color-manila);
-}
-
-.dark {
-	--background: var(--color-graphite);
-	--foreground: var(--color-gray-200);
-	--card: var(--color-gunmetal);
-	--card-foreground: var(--color-gray-200);
-	--popover: var(--color-gunmetal);
-	--popover-foreground: var(--color-gray-200);
-	--primary: var(--color-marine);
-	--primary-foreground: var(--color-white);
-	--secondary: var(--color-storm);
-	--secondary-foreground: var(--color-gray-200);
-	--muted: var(--color-dusk);
-	--muted-foreground: var(--color-slate-400);
-	--accent: var(--color-storm);
-	--accent-foreground: var(--color-gray-200);
-	--destructive: var(--color-red-600);
-	--border: rgb(255 255 255 / 8%);
-	--input: rgb(255 255 255 / 12%);
-	--ring: var(--color-marine);
-	--folder: var(--color-smoke);
-	--folder-tab: var(--color-soot);
 }
 
 @theme inline {
@@ -89,26 +46,6 @@
 	--color-baby-blue-ice: #a0c4ffff;
 	--color-periwinkle: #bdb2ffff;
 	--color-mauve: #ffc6ffff;
-	--color-porcelain: #f3f3f5ff;
-	--color-graphite: #252525ff;
-
-	/* Light */
-	--color-frost: #fafbfc;
-	--color-deep-marine: #1d5b8f;
-	--color-mist: #e6eaf0;
-	--color-haze: #e9edf2;
-	--color-fog: #dfe4eb;
-	--color-cloud: #d6dce5;
-	/* Dark */
-	--color-marine: #2f6fae;
-	--color-gunmetal: #242833;
-	--color-storm: #2e3441;
-	--color-dusk: #2a303c;
-	/* Folders, light then dark */
-	--color-folder-yellow: #fffdde;
-	--color-manila: #fffab3;
-	--color-smoke: #181818;
-	--color-soot: #070707;
 }
 
 @layer base {

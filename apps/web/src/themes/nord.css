@@ -1,0 +1,69 @@
+/* Nord: frost blue over Snow Storm in light, over Polar Night in dark */
+
+:root {
+	--background: var(--color-nord6);
+	--foreground: var(--color-nord0);
+	--card: var(--color-nord6);
+	--card-foreground: var(--color-nord0);
+	--popover: var(--color-nord6);
+	--popover-foreground: var(--color-nord0);
+	--primary: var(--color-nord10);
+	--primary-foreground: var(--color-nord6);
+	--secondary: var(--color-nord4);
+	--secondary-foreground: var(--color-nord0);
+	--muted: var(--color-nord5);
+	--muted-foreground: var(--color-nord1);
+	--accent: var(--color-nord4);
+	--accent-foreground: var(--color-nord0);
+	--destructive: var(--color-nord11);
+	--border: var(--color-nord4);
+	/* Snow Storm has nothing darker than the border, so Polar Night is thinned out */
+	--input: rgb(46 52 64 / 20%);
+	--ring: var(--color-nord10);
+	--rich-marine: var(--color-nord10);
+	--folder: var(--color-nord5);
+	--folder-tab: var(--color-nord4);
+}
+
+.dark {
+	--background: var(--color-nord0);
+	--foreground: var(--color-nord6);
+	--card: var(--color-nord2);
+	--card-foreground: var(--color-nord6);
+	--popover: var(--color-nord2);
+	--popover-foreground: var(--color-nord6);
+	--primary: var(--color-nord8);
+	--primary-foreground: var(--color-nord0);
+	--secondary: var(--color-nord3);
+	--secondary-foreground: var(--color-nord6);
+	--muted: var(--color-nord2);
+	/* nord3 is too faint for text on Polar Night, so the darkest Snow Storm is used instead */
+	--muted-foreground: var(--color-nord4);
+	--accent: var(--color-nord3);
+	--accent-foreground: var(--color-nord6);
+	--destructive: var(--color-nord11);
+	--border: var(--color-nord3);
+	--input: var(--color-nord3);
+	--ring: var(--color-nord8);
+	--rich-marine: var(--color-nord10);
+	/* Nothing is darker than nord0, so the folder is raised above the page instead of sunk */
+	--folder: var(--color-nord1);
+	--folder-tab: var(--color-nord2);
+}
+
+@theme {
+	/* Polar Night */
+	--color-nord0: #2e3440;
+	--color-nord1: #3b4252;
+	--color-nord2: #434c5e;
+	--color-nord3: #4c566a;
+	/* Snow Storm */
+	--color-nord4: #d8dee9;
+	--color-nord5: #e5e9f0;
+	--color-nord6: #eceff4;
+	/* Frost */
+	--color-nord8: #88c0d0;
+	--color-nord10: #5e81ac;
+	/* Aurora */
+	--color-nord11: #bf616a;
+}
