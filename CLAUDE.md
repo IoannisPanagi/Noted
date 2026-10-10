@@ -33,6 +33,12 @@ Noted is an application for taking post-it notes and sharing with others easily 
 - Do not add co-authored by Claude in the messages
 - Use a simpler format for the messages; Single lines "Idk why this existed" are acceptable if context is insufficient. Bullet points are used for more "Feature complete" messages like "Added realtime communications: - Added service - Added event emitter to services - Added event listener" 
 
+### Tags & Releases
+- Tags are annotated (`git tag -a`) and act as the changelog of the release
+- The tag message lists all changes from the commits between the previous tag and the new one (`git log {previous tag}..HEAD`), written as bullet points
+- Pushing a version tag publishes that version of both images to Docker Hub, do not push a tag unless asked
+- Once a couple of nice changes are in since the last tag, ask the user if a tagged update should be released or left for another time
+
 ## Technologies
 ### Server
 - Typescript
