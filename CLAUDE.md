@@ -145,7 +145,8 @@ apps/web/.env.example
 ## Testing
 Ignore for now till further notice
 
-Do not try out the code via browser, ask the user to try it out and get back to you!
+You can open it on the browser to check out your work and validate it yourself  
+Use port 5174 for web and 3001 for the backend
 
 ## Notes
 
