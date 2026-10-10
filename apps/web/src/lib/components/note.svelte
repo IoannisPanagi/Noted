@@ -27,7 +27,7 @@ import SaveHint from './save-hint.svelte';
 import { noteButtons } from '$lib/utils/noteButtons.svelte.js';
 
 // The menu, delete dialog and details popover live in note-grid.svelte, keeping each note cheap
-let { note, hidden = false, editing = $bindable(false), ontoggle, ondelete, ondetails } = $props();
+let { note, category, hidden = false, editing = $bindable(false), ontoggle, ondelete, ondetails } = $props();
 
 const notes = getNotes();
 
@@ -133,6 +133,7 @@ async function handleEditBlur() {
 				size="icon"
 				class={['note-action note-action-complete', note.isCompleted && 'is-done']}
 				aria-label={note.isCompleted ? 'Mark as not done' : 'Mark as done'}
+				title="Mark note as completed or not"
 				onclick={() => ontoggle(note)}
 			>
 				{#if note.isCompleted}
@@ -146,6 +147,7 @@ async function handleEditBlur() {
 				size="icon"
 				class={['note-action note-action-edit', editing && 'is-active']}
 				aria-label="Edit"
+				title="Edit note text"
 				onmousedown={(e) => e.preventDefault()}
 				onclick={toggleEditing}
 			>
@@ -156,6 +158,7 @@ async function handleEditBlur() {
 				size="icon"
 				class="note-action note-action-delete"
 				aria-label="Delete"
+				title="Delete note"
 				onclick={() => ondelete(note)}
 			>
 				<Eraser />
@@ -187,6 +190,9 @@ async function handleEditBlur() {
 			{#if editing}
 				<SaveHint onsave={handleEditSave} oncancel={handleEditCancel} />
 			{:else}
+				{#if category}
+					<span class="note-category" title={category}>{category}</span>
+				{/if}
 				{#if overflows}
 					<button
 						class="note-expand"
@@ -241,6 +247,15 @@ async function handleEditBlur() {
 
 .note-footer {
 	@apply relative flex items-center justify-end pt-1;
+}
+
+.note-category {
+	@apply me-auto min-w-0 flex-1 truncate px-1 text-base font-semibold;
+}
+
+/* Stops short of the centred expand arrow */
+.note.is-expandable .note-category {
+	@apply max-w-1/2 pe-5;
 }
 
 .note-expand {

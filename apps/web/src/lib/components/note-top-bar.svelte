@@ -36,6 +36,7 @@ const workspace = getWorkspace();
 const notes = getNotes();
 
 let newNoteText = $state('');
+let newNoteField = $state(null);
 
 let description = $derived(workspace.current?.description ?? '');
 let descriptionField;
@@ -161,11 +162,18 @@ async function handleLeave() {
 			<InputGroup>
 				<InputGroupTextarea
 					class="top-bar-textarea"
+					bind:ref={newNoteField}
 					bind:value={newNoteText}
 					onkeydown={handleNewNoteKeydown}
 					placeholder="Write a note and press Enter (markdown works)"
 				/>
 				<InputGroupAddon align="block-end">
+					<SaveHint
+						class="top-bar-compose-hint"
+						action="add"
+						onsave={() => handleNewNote()}
+						oncancel={() => newNoteField.blur()}
+					/>
 					<Button type="submit" class="top-bar-submit">Submit</Button>
 				</InputGroupAddon>
 			</InputGroup>
@@ -257,6 +265,15 @@ async function handleLeave() {
 
 .top-bar-compose-form :global(.top-bar-textarea) {
 	@apply min-h-16;
+}
+
+/* Only while writing, like the description's hint */
+.top-bar-compose-form :global(.top-bar-compose-hint) {
+	@apply hidden;
+}
+
+.top-bar-compose-form:has(:global(.top-bar-textarea:focus)) :global(.top-bar-compose-hint) {
+	@apply flex;
 }
 
 .top-bar-compose-form :global(.top-bar-submit) {

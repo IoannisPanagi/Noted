@@ -1,4 +1,4 @@
-import { upsert, without } from '$lib/utils/collection.js';
+import { prepend, upsert, without } from '$lib/utils/collection.js';
 
 export const COLORS = [
 	'bg-powder-blush',
@@ -24,7 +24,7 @@ export class Notes {
 	#listeners = {
 		// Reloads on every reconnect to catch what was missed
 		connect: () => this.load(),
-		'note.created': (note) => (this.list = upsert(this.list, note)),
+		'note.created': (note) => (this.list = prepend(this.list, note)),
 		'note.updated': (note) => (this.list = upsert(this.list, note)),
 		'note.deleted': (id) => (this.list = without(this.list, id)),
 		'notes.cleared': () => (this.list = []),
@@ -57,11 +57,10 @@ export class Notes {
 			note: {
 				text,
 				backgroundColor: randomBackgroundColor(),
-				noteOrder: this.list.length,
 				categoryId: categoryId ?? null,
 			},
 		});
-		this.list = upsert(this.list, saved);
+		this.list = prepend(this.list, saved);
 	}
 
 	async update(note) {

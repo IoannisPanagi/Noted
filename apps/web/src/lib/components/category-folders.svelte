@@ -66,9 +66,9 @@ let fontsLoaded = $state(false);
 
 document.fonts.ready.then(() => (fontsLoaded = true));
 
-// Reads everything that changes which tabs fit (bold active tab is wider)
+// Reads everything that changes which tabs fit
 function fitTabList(tabList) {
-	[innerWidth, fontsLoaded, folders, active, isMoreOpen];
+	[innerWidth, fontsLoaded, folders];
 	tabList.style.width = '';
 
 	const listBox = tabList.getBoundingClientRect();
@@ -352,7 +352,7 @@ async function handleDelete() {
 }
 
 .folder-tabs :global(.folder-tab.is-active) {
-	@apply bg-(--folder) font-semibold text-foreground;
+	@apply bg-(--folder) text-foreground;
 }
 
 .folder-tabs :global(.folder-tab svg) {

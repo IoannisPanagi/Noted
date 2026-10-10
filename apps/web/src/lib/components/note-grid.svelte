@@ -54,6 +54,11 @@ let isDetailsOpen = $state(false);
 // Radio values are strings, so "All" (no category) is the empty string
 let folders = $derived([{ id: '', label: 'all' }, ...categories.list]);
 
+// Looked up once here, so each note doesn't search the categories itself. Empty inside a category, where every label would be the same
+let categoryLabels = $derived(
+	new Map(categories.activeId ? [] : categories.list.map((category) => [category.id, toTitleCase(category.label)])),
+);
+
 // No note (or the one being edited) disables the menu, leaving the browser's own for copy and paste
 function handleContextMenu(e) {
 	const id = e.target.closest('[data-note-id]')?.dataset.noteId ?? null;
@@ -130,6 +135,7 @@ function formatDate(isoString) {
 				{#each notes.list as note (note.id)}
 					<Note
 						{note}
+						category={categoryLabels.get(note.categoryId)}
 						hidden={!isShown(note)}
 						bind:editing={
 							() => editingId === note.id,

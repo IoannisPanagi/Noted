@@ -46,12 +46,11 @@ export class NotesService {
 
 		await this.workspacesService.ensureExists(passphrase);
 
-		const [savedNote] = await this.notesRepository.save({
+		const savedNote = await this.notesRepository.create({
 			id: Date.now().toString(36),
 			passphrase,
 			text: dto.text,
 			backgroundColor: dto.backgroundColor,
-			noteOrder: dto.noteOrder,
 			createdAt: new Date().toISOString(),
 			completedAt: null,
 			isCompleted: false,

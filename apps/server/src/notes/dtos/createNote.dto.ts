@@ -5,7 +5,6 @@ export const CreateNoteSchema = z.object({
 	// TODO Cap the length of text and backgroundColor
 	text: z.string().min(1),
 	backgroundColor: z.string().min(1),
-	noteOrder: z.number().int(),
 	categoryId: z
 		.string()
 		.min(1)
