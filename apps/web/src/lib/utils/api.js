@@ -27,8 +27,11 @@ api.interceptors.response.use(
 		if (error.response) return Promise.reject(error.response.data);
 
 		// Messages that had no response and axios has to fill for them go through this filter for better messaging. (If one is available of course)
+		// The code is kept so callers can tell a dead server from a slow one
 		const message = noResponseMessages[error.code];
-		return Promise.reject(message ? new Error(message) : error);
+		return Promise.reject(
+			message ? Object.assign(new Error(message), { code: error.code }) : error,
+		);
 	},
 );
 
