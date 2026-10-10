@@ -1,0 +1,31 @@
+# The nginx image replaces ${API_UPSTREAM} from the environment on startup
+server {
+	listen 80;
+	root /usr/share/nginx/html;
+
+	gzip on;
+	gzip_types text/css application/javascript image/svg+xml;
+
+	# Routes live in the browser, so unknown paths get the app
+	location / {
+		try_files $uri /index.html;
+	}
+
+	location /api/ {
+		proxy_pass ${API_UPSTREAM};
+		proxy_set_header Host $host;
+		proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
+		proxy_set_header X-Forwarded-Proto $scheme;
+	}
+
+	# Socket.io's transport path sits outside /api and needs the websocket upgrade
+	location /socket.io/ {
+		proxy_pass ${API_UPSTREAM};
+		proxy_http_version 1.1;
+		proxy_set_header Upgrade $http_upgrade;
+		proxy_set_header Connection "upgrade";
+		proxy_set_header Host $host;
+		proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
+		proxy_set_header X-Forwarded-Proto $scheme;
+	}
+}
