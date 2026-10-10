@@ -138,9 +138,10 @@ apps/web/.env.example
 
 ## Docs
 **CLAUDE.md**: This document, extends claude context and ability to interact with the codebase  
-**TODO.md**: A "living" document that describes things that had to be done and are done, as well as some architectural decisions  
+**docs/TODO.md**: A "living" document that describes things that had to be done and are done, as well as some architectural decisions  
+**docs/DIARY.md**: A day by day log of what was done, newest day first  
 **README.md**: Living in the project root, written for end users who deploy the app via Docker  
-**ERRORS-CORRECTION-API.md**: A "living" document that describes error procedures relating to the server app
+**docs/ERRORS-CORRECTION-API.md**: A "living" document that describes error procedures relating to the server app
 
 ## Testing
 Ignore for now till further notice

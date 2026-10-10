@@ -72,7 +72,7 @@ Last verified against a live server + scratch DB on 2026-09-22.
 - **Zod validation**: `nestjs-zod` — a global `ZodValidationPipe` plus
   `createZodDto` DTOs for login, notes, categories and workspaces; `PayloadSchema` re-validates decoded JWTs. `UpdateNoteSchema` no
   longer accepts `passphrase`, since the workspace always comes from
-  authentication. Standards live in `apps/server/ERRORS-CORRECTION-API.md`.
+  authentication. Standards live in `ERRORS-CORRECTION-API.md`.
 - **Categories (full CRUD)**: `GET`/`POST /api/categories`,
   `PUT`/`DELETE /api/categories/:id`. Lookups are workspace-scoped, labels are
   trimmed and lowercased, and a label may only exist once per workspace.
@@ -279,57 +279,20 @@ the first error of the four, otherwise the first still loading.
   with `list.notes` on every connect, never over REST; the page filters by
   folder and "Show completed". A deleted category's notes fall back to "All".
 
-## Cleanup (2026-10-02)
+## Bugs
 
-The redesign replaced the old page: `/notes` is the new notes page, and the
-old page, its components (masonry, drawer, dialogs, category form), the
-module stores, `$lib/utils/socket.js`, `/new/notes`, `/design` and the
-`new-theme` scoping are gone. The theme lives in `app.css`, fonts and shared
-styles load from `main.js`, and the components sit in `src/lib/components`
-with their CSS in `components/styles/` (since moved into each component's
-`<style>` block, see below). The unused `accordion`, `drawer` and
-`tabs` UI components and the `svelte-bricks` / `vaul-svelte` dependencies were
-removed. The API URL comes from `VITE_API_URL` (`apps/web/.env`, see
-`.env.example`).
-
-## Cleanup (2026-10-08)
-
-- Component styles moved from `components/styles/` into each component's
-  in-file `<style>` block. Classes on shadcn components use `:global` under a
-  scoped parent; the fonts and the dialog/danger classes shared by three
-  components live in `app.css`.
-- `TokenResDto` moved from `notes/dtos/` to `tokens/dtos/`.
-- Svelte autofixer findings fixed (tab list fitting is an attachment,
-  `isShown` is a plain function).
-- Controllers no longer re-check `passphrase`: `@Passphrase()` already
-  throws when the guard resolved no workspace.
-- Event files all follow `*.event.ts` (`categoryDeleted.event.ts`,
-  `workspaceDestroyed.event.ts`).
-- `constants.ts` loads `.env` through `dotenv` (quiet, no override);
-  `prettier` removed, Biome formats.
-- Web: event handlers are all `handle{Action}` or `toggle{Action}`; the
-  stray eslint comment in `$lib/utils.js` and the empty `$lib/index.js`
-  are gone.
-- **Note buttons toggle** (was an idea): a button next to the light/dark
-  switch, shown on `/notes`, hides every note's toolbar and footer buttons,
-  leaving the right-click menu. On by default, remembered in localStorage
-  (`$lib/utils/noteButtons.svelte.js`).
-
-## Bugs found (2026-10-08)
-
-- **Passphrase gate swallows login failures** (fixed 2026-10-09): the gate
-  now shows refused logins and server errors.
-- **"Leave workspace" fails silently** (fixed 2026-10-09): logout failures
-  are toasted. The `api.js` interceptor turns an unreachable server or a
-  timeout into a readable `message` for every caller, and keeps axios's
-  `code` on it so a caller can tell a dead server from a slow one.
+- **Edit button sometimes does nothing on a client's first action**: when
+  editing a note is the first thing a client does, the edit button can fail to
+  put the note into its editing state. Intermittent, cause not looked into
+  yet. Editing is `toggleEditing` in `note.svelte` and ends on the editor's
+  blur, which is the first place to look.
 - **Socket validation errors read "Internal server error"**: the global
   `ZodValidationPipe` does run on gateway messages, but it throws an
   `HttpException`, which Nest's websocket filter reports as a generic
   internal error instead of the validation message. Needs a small ws
   exception filter (or converting to `WsException`).
 
-## Code tidy-ups (2026-10-08)
+## Code tidy-ups
 
 - `WorkspacesRepository.delete` is unused (`deleteWithContents` replaced
   it). `PUT /api/workspaces` calls `save` directly, unlike the gateway
@@ -353,20 +316,49 @@ Renamed from "Passphrase gate". The current look stays; no redesign planned.
     remembered (`if (password) return;`), so the server doesn't need to
     expose a lock flag.
 
-## Pages (2026-10-10)
+## Pages
 
-- **404 page** (built): `[...fallback].svelte` shows the crying toast
-  (`$lib/assets/404_toast.png`), a short message and a "Back to the gate"
-  button.
-- **Network page** (built, not linked yet): `/network` calls
-  `GET /api/health` on mount and shows one of six states — checking, healthy,
-  server unreachable, server not responding (timeout), database unavailable
-  (503) or unknown — with a progress bar (shadcn `progress`, newly installed),
+- **Network page**: `/network` calls `GET /api/health` on mount and shows one
+  of six states — checking, healthy, server unreachable, server not responding
+  (timeout), database unavailable (503) or unknown — with a progress bar,
   "Check again", and "Back to the gate" once healthy.
   - **Still to do**: nothing sends the user there. Timed-out socket messages
     aren't toasted (only the server's `exception` events are), so a dropped
     connection still fails silently; see the TODO in `socket.svelte.js`.
-- **Favicon** redrawn.
+
+## Docker
+
+One Dockerfile per app (`apps/server/Dockerfile`, `apps/web/Dockerfile`),
+following the Turborepo layout: each is built from the repository root
+(`docker build -f apps/web/Dockerfile .`) and starts with
+`turbo prune <app> --docker`, so an app's image only installs and builds that
+app.
+
+- **Same origin instead of a baked API URL**: the web app calls a relative
+  `/api` (and `io('/api/workspace')`), so nothing deploy-specific is in the
+  bundle. Whatever serves the page forwards `/api` and `/socket.io`
+  (Socket.io's transport path, which is not under `/api`) to the server.
+  - **Web image**: nginx serving `apps/web/dist/client`, config in
+    `apps/web/nginx.conf.template`. `API_UPSTREAM` (default
+    `http://server:3000`) is filled in on container start.
+  - **Dev**: Vite's `server.proxy` does the same, target from
+    `API_PROXY_TARGET` in `apps/web/.env` (default `http://localhost:3000`).
+  - `CORS_ORIGINS` is not needed for either.
+- **Server image**: `node dist/main.js` as the `node` user from `/app`, with
+  production dependencies from `pnpm deploy`. `DB_FILE_NAME` defaults to
+  `data/noted.db` so the database sits in the `/app/data` volume, and
+  migrations run on startup from `/app/drizzle`. `enableShutdownHooks()` is
+  there because Node ignores SIGTERM as a container's main process.
+- **Publishing** (`.github/workflows/publish.yml`, not run yet): builds both
+  images and pushes them to Docker Hub as `ioannispanagi/noted-server` and
+  `ioannispanagi/noted-web`. A push to `main` publishes `latest`, a version
+  tag like `v1.2.0` publishes `1.2.0` and `1.2` for both. Uses the
+  `DOCKER_USERNAME` and `DOCKER_PASSWORD` secrets of the `Docker` environment.
+- **README**: holds the compose example (there is no compose file in the
+  repo) and a section on mounting an existing database. A bind mount needs
+  `:Z,U` on Podman, otherwise SQLite can't open the file.
+- **Known limit**: the auth cookie is `secure` under `NODE_ENV=production`,
+  so a plain-http deployment on anything but `localhost` can't log in.
 
 ## Technological Advancements
 
@@ -402,6 +394,9 @@ Where the new notes page improves on the existing one.
   server has acknowledged the change, and failures reach the error toast.
 - **Context menus**: right-click menus on category tabs, the More list and
   notes.
+- **Hiding note buttons**: a button next to the light/dark switch hides every
+  note's toolbar and footer buttons, leaving the right-click menu. On by
+  default, remembered in localStorage (`$lib/utils/noteButtons.svelte.js`).
 - **Renaming categories**: labels can be edited, not only descriptions, and
   the category dialog checks for empty or duplicate labels as you type. The
   server's duplicate error never reached the old UI.
