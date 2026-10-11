@@ -1,7 +1,7 @@
 {
 	"name": "web",
 	"private": true,
-	"version": "1.2.1 (Apple Pie)",
+	"version": "1.2.2 (Apple Pie)",
 	"type": "module",
 	"scripts": {
 		"dev": "vite",
