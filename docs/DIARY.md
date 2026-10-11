@@ -5,6 +5,19 @@ What was done on each day, newest day first. Built from the commit history;
 
 ## 2026
 
+### 2026-10-11
+
+- Experiment: the theme colors moved out of `app.css` into their own
+  stylesheets under `apps/web/src/themes` (`toasty`, `dracula`, `nord`);
+  `app.css` imports the active one, toasty for now.
+- The experiment was scrapped: dracula and nord are gone and toasty lives in
+  `app.css` again, with its colors renamed after what they look like (a
+  `blue-gray` scale, `lavender-blue`, `light-sky-blue`, `charcoal`, `coal`).
+- Errors use `crimson` (`#d72835`) instead of `red-600`, white text on it
+  reads better; the login page's passphrase error follows it.
+- `APP_VERSION` on the server now says 1.0.1.
+- Versions: web 1.2.2.
+
 ### 2026-10-10
 
 - Docker: one Dockerfile per app (`apps/server`, `apps/web`) using

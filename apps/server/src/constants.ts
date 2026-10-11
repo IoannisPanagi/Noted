@@ -8,7 +8,7 @@ config({ quiet: true });
 export const DB = 'SQLITE_DATABASE';
 export const DB_CONNECTION = process.env.DB_FILE_NAME ?? 'noted.db';
 export const APP_NAME = 'Noted';
-export const APP_VERSION = '1.0 (Solaris)';
+export const APP_VERSION = '1.0.1 (Solaris)';
 export const APP_AUTH_COOKIE_NAME = `${APP_NAME}-authentication`;
 export const IS_PUBLIC_KEY = 'isPublic';
 

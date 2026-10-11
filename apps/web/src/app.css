@@ -3,7 +3,7 @@
 @import "tw-animate-css";
 @plugin "@tailwindcss/typography";
 
-/* Marine on cool slate, over the porcelain/graphite page */
+/* Toasty: marine on blue-gray, over the porcelain/graphite page */
 
 @custom-variant dark (&:is(.dark *));
 
@@ -11,48 +11,48 @@
 	--radius: 0.5rem;
 	--background: var(--color-porcelain);
 	--foreground: var(--color-gray-900);
-	--card: var(--color-frost);
+	--card: var(--color-blue-gray-50);
 	--card-foreground: var(--color-gray-900);
-	--popover: var(--color-frost);
+	--popover: var(--color-blue-gray-50);
 	--popover-foreground: var(--color-gray-900);
 	--primary: var(--color-deep-marine);
 	--primary-foreground: var(--color-white);
-	--secondary: var(--color-mist);
+	--secondary: var(--color-blue-gray-200);
 	--secondary-foreground: var(--color-gray-900);
-	--muted: var(--color-haze);
-	--muted-foreground: var(--color-slate-500);
-	--accent: var(--color-mist);
+	--muted: var(--color-blue-gray-100);
+	--muted-foreground: var(--color-slate-700);
+	--accent: var(--color-blue-gray-200);
 	--accent-foreground: var(--color-gray-900);
-	--destructive: var(--color-red-600);
-	--border: var(--color-fog);
-	--input: var(--color-cloud);
+	--destructive: var(--color-crimson);
+	--border: var(--color-blue-gray-300);
+	--input: var(--color-blue-gray-400);
 	--ring: var(--color-deep-marine);
 	--rich-marine: var(--color-blue-500);
-	--folder: var(--color-folder-yellow);
-	--folder-tab: var(--color-manila);
+	--folder: var(--color-lavender-blue);
+	--folder-tab: var(--color-light-sky-blue);
 }
 
 .dark {
 	--background: var(--color-graphite);
 	--foreground: var(--color-gray-200);
-	--card: var(--color-gunmetal);
+	--card: var(--color-blue-gray-900);
 	--card-foreground: var(--color-gray-200);
-	--popover: var(--color-gunmetal);
+	--popover: var(--color-blue-gray-900);
 	--popover-foreground: var(--color-gray-200);
 	--primary: var(--color-marine);
 	--primary-foreground: var(--color-white);
-	--secondary: var(--color-storm);
+	--secondary: var(--color-blue-gray-700);
 	--secondary-foreground: var(--color-gray-200);
-	--muted: var(--color-dusk);
-	--muted-foreground: var(--color-slate-400);
-	--accent: var(--color-storm);
+	--muted: var(--color-blue-gray-800);
+	--muted-foreground: var(--color-slate-300);
+	--accent: var(--color-blue-gray-700);
 	--accent-foreground: var(--color-gray-200);
-	--destructive: var(--color-red-600);
+	--destructive: var(--color-crimson);
 	--border: rgb(255 255 255 / 8%);
 	--input: rgb(255 255 255 / 12%);
 	--ring: var(--color-marine);
-	--folder: var(--color-smoke);
-	--folder-tab: var(--color-soot);
+	--folder: var(--color-charcoal);
+	--folder-tab: var(--color-coal);
 }
 
 @theme inline {
@@ -81,6 +81,29 @@
 }
 
 @theme {
+	/* Page, light then dark */
+	--color-porcelain: #f3f3f5ff;
+	--color-graphite: #252525ff;
+	/* Surfaces: the light end in light mode, the dark end in dark mode */
+	--color-blue-gray-50: #fafbfc;
+	--color-blue-gray-100: #e9edf2;
+	--color-blue-gray-200: #e6eaf0;
+	--color-blue-gray-300: #dfe4eb;
+	--color-blue-gray-400: #d6dce5;
+	--color-blue-gray-700: #2e3441;
+	--color-blue-gray-800: #2a303c;
+	--color-blue-gray-900: #242833;
+	/* Primary, light then dark */
+	--color-deep-marine: #1d5b8f;
+	--color-marine: #2f6fae;
+	/* Errors */
+	--color-crimson: #d72835;
+	/* Folders, light then dark */
+	--color-lavender-blue: #dde3ff;
+	--color-light-sky-blue: #bad5fa;
+	--color-charcoal: #3b3b3b;
+	--color-coal: #303030;
+	/* Notes */
 	--color-powder-blush: #ffadadff;
 	--color-apricot-cream: #ffd6a5ff;
 	--color-cream: #fdffb6ff;
@@ -89,26 +112,6 @@
 	--color-baby-blue-ice: #a0c4ffff;
 	--color-periwinkle: #bdb2ffff;
 	--color-mauve: #ffc6ffff;
-	--color-porcelain: #f3f3f5ff;
-	--color-graphite: #252525ff;
-
-	/* Light */
-	--color-frost: #fafbfc;
-	--color-deep-marine: #1d5b8f;
-	--color-mist: #e6eaf0;
-	--color-haze: #e9edf2;
-	--color-fog: #dfe4eb;
-	--color-cloud: #d6dce5;
-	/* Dark */
-	--color-marine: #2f6fae;
-	--color-gunmetal: #242833;
-	--color-storm: #2e3441;
-	--color-dusk: #2a303c;
-	/* Folders, light then dark */
-	--color-folder-yellow: #fffdde;
-	--color-manila: #fffab3;
-	--color-smoke: #181818;
-	--color-soot: #070707;
 }
 
 @layer base {
