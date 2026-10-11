@@ -23,7 +23,7 @@
 	--muted-foreground: var(--color-slate-700);
 	--accent: var(--color-blue-gray-200);
 	--accent-foreground: var(--color-gray-900);
-	--destructive: var(--color-red-600);
+	--destructive: var(--color-crimson);
 	--border: var(--color-blue-gray-300);
 	--input: var(--color-blue-gray-400);
 	--ring: var(--color-deep-marine);
@@ -47,7 +47,7 @@
 	--muted-foreground: var(--color-slate-300);
 	--accent: var(--color-blue-gray-700);
 	--accent-foreground: var(--color-gray-200);
-	--destructive: var(--color-red-600);
+	--destructive: var(--color-crimson);
 	--border: rgb(255 255 255 / 8%);
 	--input: rgb(255 255 255 / 12%);
 	--ring: var(--color-marine);
@@ -96,6 +96,8 @@
 	/* Primary, light then dark */
 	--color-deep-marine: #1d5b8f;
 	--color-marine: #2f6fae;
+	/* Errors */
+	--color-crimson: #d72835;
 	/* Folders, light then dark */
 	--color-lavender-blue: #dde3ff;
 	--color-light-sky-blue: #bad5fa;

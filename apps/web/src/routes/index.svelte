@@ -102,7 +102,7 @@
 		</CardHeader>
 		<CardContent>
 			<form onsubmit={handleSubmit} noValidate>
-				<InputGroup class={fieldError !== null ? 'border-red-500' : ''}>
+				<InputGroup class={fieldError !== null ? 'border-destructive' : ''}>
 					<InputGroupInput
 						id="passphrase"
 						name="passphrase"
@@ -113,7 +113,7 @@
 						onkeydown={handleInputKeydown}
 					/>
 					{#if fieldError}
-						<InputGroupText class="text-red-500 pe-3">
+						<InputGroupText class="text-destructive pe-3">
 							{fieldError}
 						</InputGroupText>
 					{/if}
